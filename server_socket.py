@@ -15,6 +15,7 @@ class ServerSocket:
         self.database = Database()
         self.outgoing_queue = queue.Queue(10)
         self.auth = Authentication()
+        self.logged_in_users = {}
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,17 +68,24 @@ class ServerSocket:
                                     .encode('utf-8'))
                     else:
                         loggedin_if = {"Type": "Logged",
-                                       "Payload": ["Logged in!."]}
+                                       "Payload": ["Successfuly logged in!"]}
                         self.outgoing_queue.put(loggedin_if)
                         client.send(self._jsonify_data(self.outgoing_queue.get())
                                     .encode('utf-8'))
                         print("Logged in!")
+                        # saved lgogedin users
+                        self.logged_in_users[client] = username
 
                 elif data["Type"] == "Action":
                     print("Action request...")
             except WindowsError:
-                if len(self.connected_users) <= 0:
-                    pass
+                # if len(self.connected_users) <= 0:
+                try:
+                    left_username = self.logged_in_users[client]
+                    print(f"{left_username} has left.")
+                except:
+                    print(f"{client} has left.")
+                break
                 # else:
                 #     print(f"{client} has left...")
                 #     for user in self.connected_users:
