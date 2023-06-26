@@ -30,6 +30,9 @@ class ClientSocket:
                       "\n---------------------------")
                 self._send_data()
 
+            elif received_data["Type"] == "Logged":
+                print(received_data["Payload"][0])
+
             else:
                 print("DATA: ", received_data)
 
