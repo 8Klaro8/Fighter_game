@@ -20,8 +20,8 @@ class Fighter:
     def _resurrect_fighter(self):
         pass
 
-    def _random_pos(self):
+    def _random_pos(self) -> list:
         """ Saves a random position for a fighter """
         x_pos = random.randint(0,5)
         y_pos = random.randint(0,5)
-        self.pos = (x_pos, y_pos)
+        self.pos = [x_pos, y_pos]
