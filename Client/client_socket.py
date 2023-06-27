@@ -2,6 +2,7 @@
 
 import socket, json, threading
 from Authentication.auth import Authentication
+from Client.strategy import ChooseStrategy
 
 
 class ClientSocket:
@@ -10,6 +11,7 @@ class ClientSocket:
         self.HOST = host
         self.client_socket = None
         self.auth = Authentication()
+        self.choose_strategy = ChooseStrategy()
 
     def _create_socket(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,6 +34,9 @@ class ClientSocket:
 
             elif received_data["Type"] == "Logged":
                 print(received_data["Payload"][0])
+                # calling strategy
+                strategy = self.choose_strategy.choose_option()
+                print("STRAT: ", strategy)
 
             else:
                 print("DATA: ", received_data)
