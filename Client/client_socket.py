@@ -3,6 +3,7 @@
 import socket, json, threading
 from Authentication.auth import Authentication
 from Client.strategy import ChooseStrategy
+from Client.arena import Map
 
 
 class ClientSocket:
@@ -12,6 +13,7 @@ class ClientSocket:
         self.client_socket = None
         self.auth = Authentication()
         self.choose_strategy = ChooseStrategy()
+        self.map = Map()
 
     def _create_socket(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,8 +37,12 @@ class ClientSocket:
             elif received_data["Type"] == "Logged":
                 print(received_data["Payload"][0])
                 # calling strategy
+                strategy_if = {"Type": "Strategy", "Payload": []}
                 strategy = self.choose_strategy.choose_option()
-                print("STRAT: ", strategy)
+                print("SENDING STRATEGY: ", strategy)
+                # send strategy to server
+                strategy_if["Payload"].append(strategy[0])
+                self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))                
 
             else:
                 print("DATA: ", received_data)
