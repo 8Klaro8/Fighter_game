@@ -92,13 +92,23 @@ class ServerSocket:
                     # send all client all fighter pos
                     self._broadcast_fighters_pos()
 
-            except WindowsError:
+            except WindowsError as e:
                 try:
                     i = self._get_user_by_client(client)
                     left_username = self.connected_users[i]["Username"]
+                    # delete fighter
+                    for fighter in self.fighters:
+                        if fighter.name == left_username:
+                            self.fighters.remove(fighter)
                     print(f"'{left_username}' has left.")
-                except:
+                    # remove client
+                    self.connected_users.pop(i)
+                except Exception as ex:
                     print(f"{client} has left before login.")
+                    print(ex)
+                    # remove client
+                    self.connected_users.pop(i)
+                    print("USERRS: ", self.connected_users)
                 break
                 # else:
                 #     print(f"{client} has left...")
@@ -133,12 +143,15 @@ class ServerSocket:
 
     def _register_user(self, test_register_payload, client):
         user_exists_if = {"Type": "Fail", "Payload": ["User already exists."]}
+        successful_reg_if = {"Type": "Successful", "Payload": ["Successful registration!"]}
         # test_register_payload = {"Type": "Register",
         #                          "Payload": [{"Username": "Kakao", "Password": "123"}]}
         
         if not self._user_exists(test_register_payload):
             print("Saving new user...")
             self.database._save_user(test_register_payload)
+            self.outgoing_queue.put(successful_reg_if)
+            client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
         else:
             self.outgoing_queue.put(user_exists_if)
             print("User already exists...")
