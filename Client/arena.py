@@ -1,4 +1,4 @@
-import sys
+import sys, random
 
 
 
@@ -31,6 +31,34 @@ class Map:
                     print("\n_______________")
                 else:
                     print(self.map_array[i][j], end="")
+
+    def _place_fighter(self, fighters):
+        # for fighter in fighters:
+        #     name = fighter[0]
+        #     x_pos = fighter[1]
+        #     y_pos = fighter[2]
+            # print("FIGHTERS: ", fighters, x_pos, y_pos)
+
+        column_array = []
+        for row in range(self.map_size["y"]):
+            for column in range(self.map_size["x"]):
+                for fighter in fighters:
+                    name = fighter[0]
+                    x_pos = fighter[1]
+                    y_pos = fighter[2]
+                    
+                    if row == y_pos and column == x_pos:
+                        column_array.append(f" {name[:1]}|")
+                    else:
+                        column_array.append("  |")
+                self.map_array.append(column_array)
+                column_array = []
+
+    # def _random_pos(self) -> tuple:
+    #     """ Returns a random position for a fighter """
+    #     x_pos = random.randint(0,5)
+    #     y_pos = random.randint(0,5)
+    #     return (x_pos, y_pos)
 
 
 if __name__ == '__main__':
