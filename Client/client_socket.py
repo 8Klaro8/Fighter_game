@@ -48,6 +48,7 @@ class ClientSocket:
             elif received_data["Type"] == "Fighters":
                 print(f"\n{received_data['Payload']}")
                 # save fighters
+                self.fighters_details = []
                 for fighter in received_data["Payload"]:
                     name = fighter["Name"]
                     x_pos = fighter["Pos"][0]
