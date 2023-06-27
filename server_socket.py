@@ -89,7 +89,8 @@ class ServerSocket:
                     fighter_name = self.connected_users[i]["Username"]
                     fighter = Fighter(fighter_name, strategy)
                     self.fighters.append(fighter) # append created fihter to all fighter
-
+                    # send all client all fighter pos
+                    self._broadcast_fighters_pos()
 
             except WindowsError:
                 try:
@@ -104,6 +105,21 @@ class ServerSocket:
                 #     for user in self.connected_users:
                 #         if client == user["Client"]:
                 #             self.connected_users.remove(user)
+
+    def _broadcast_fighters_pos(self):
+        fighter_details_if = {"Type": "Fighters", "Payload": []}
+        for fighter in self.fighters:
+            fighter_details = {"Name": None, "Pos": None}
+            pos = fighter.pos
+            name = fighter.name
+            fighter_details["Name"] = name
+            fighter_details["Pos"] = pos
+            fighter_details_if["Payload"].append(fighter_details)
+        # self.outgoing_queue.put(fighter_details_if)
+
+        for i in range(len(self.connected_users)):
+            self.connected_users[i]["Client"].send(self._jsonify_data(fighter_details_if)
+                                            .encode('utf-8'))
 
     def _get_user_by_client(self, client) -> int:
         """ Returns the int that represents the corresponding user """
