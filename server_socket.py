@@ -1,6 +1,7 @@
 import socket, json, threading, time, queue
 from Database.database import Database
 from Authentication.auth import Authentication
+from Fighter.fighter import Fighter
 
 # class OutgoingQueue:
 #     def __init__(self) -> None:
@@ -15,7 +16,7 @@ class ServerSocket:
         self.database = Database()
         self.outgoing_queue = queue.Queue(10)
         self.auth = Authentication()
-        self.logged_in_users = {}
+        self.fighters = []
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,24 +74,46 @@ class ServerSocket:
                         client.send(self._jsonify_data(self.outgoing_queue.get())
                                     .encode('utf-8'))
                         print("Logged in!")
-                        # saved lgogedin users
-                        self.logged_in_users[client] = username
+                        # saved logged in users
+                        i = self._get_user_by_client(client)
+                        self.connected_users[i]["Username"] = username
 
                 elif data["Type"] == "Action":
                     print("Action request...")
+
+                elif data["Type"] == "Strategy":
+                    strategy = data["Payload"]
+                    print("RECEIEVING STRATEGY: ", strategy)
+                    # creating fighter
+                    i = self._get_user_by_client(client)
+                    fighter_name = self.connected_users[i]["Username"]
+                    fighter = Fighter(fighter_name, strategy)
+                    self.fighters.append(fighter) # append created fihter to all fighter
+
+
             except WindowsError:
-                # if len(self.connected_users) <= 0:
                 try:
-                    left_username = self.logged_in_users[client]
-                    print(f"{left_username} has left.")
+                    i = self._get_user_by_client(client)
+                    left_username = self.connected_users[i]["Username"]
+                    print(f"'{left_username}' has left.")
                 except:
-                    print(f"{client} has left.")
+                    print(f"{client} has left before login.")
                 break
                 # else:
                 #     print(f"{client} has left...")
                 #     for user in self.connected_users:
                 #         if client == user["Client"]:
                 #             self.connected_users.remove(user)
+
+    def _get_user_by_client(self, client) -> int:
+        """ Returns the int that represents the corresponding user """
+        for i in range(len(self.connected_users)):
+            if self.connected_users[i]["Client"] == client:
+                return i
+
+    def _send_fighters_pos(self):
+        """ Sends all fighters pos to clients """
+
 
     def _register_user(self, test_register_payload, client):
         user_exists_if = {"Type": "Fail", "Payload": ["User already exists."]}
