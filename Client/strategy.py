@@ -9,8 +9,9 @@ class ChooseStrategy:
         self.strategies = []
         self.options = {1: ["Choose strategy", self.show_strategies],
                         2: ["Go to Fight!", self._fight]}
+        self.is_fight = False
 
-    def choose_option(self):
+    def choose_option(self) -> list:
         print("\n------------------------\n"
               "Options:")
         for i in range(len(self.options)):
@@ -20,11 +21,19 @@ class ChooseStrategy:
         # calling chosed option
         self.options[chosen_option][1]()
 
+        # if already pressed fight then return staregies
+        if self.is_fight:
+            return self.strategies
+
     def _fight(self):
         if len(self.strategies) <= 0:
             self._print_prompt("Can't fight without choosing stategy!")
-            return
-        self._print_prompt("FIGHT")
+            self.choose_option()
+        if not self.is_fight:
+            self._print_prompt("FIGHT")
+            self.is_fight = True
+        
+        # TODO return strategy to fight
 
     def show_strategies(self):
         print("\n------------------------\nActions")
@@ -40,11 +49,14 @@ class ChooseStrategy:
         if not self._strategy_added(strategy):
             self._print_prompt(f"Your chosen strategy\nDo: {action}\nWhen: {event}")
             self.strategies.append(strategy)
+            self.choose_option()
 
         else:
             self._print_prompt("Your chosen strategy already exists.")
+            self.choose_option()
             
-        print(self.strategies)
+        # print(self.strategies)
+        # self.choose_option()
 
     def _print_prompt(self, text):
         print("\n------------------------\n"
