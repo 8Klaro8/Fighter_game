@@ -14,6 +14,7 @@ class ClientSocket:
         self.auth = Authentication()
         self.choose_strategy = ChooseStrategy()
         self.map = Map()
+        self.fighters_details = []
 
     def _create_socket(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,7 +46,22 @@ class ClientSocket:
                 self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))                
 
             elif received_data["Type"] == "Fighters":
-                print(received_data["Payload"])
+                print(f"\n{received_data['Payload']}")
+                # save fighters
+                for fighter in received_data["Payload"]:
+                    name = fighter["Name"]
+                    x_pos = fighter["Pos"][0]
+                    y_pos = fighter["Pos"][1]
+                    fighter_list = [name, x_pos, y_pos]
+                    if fighter_list not in self.fighters_details:
+                        self.fighters_details.append(fighter_list)
+                # print map with fighters on it
+                self.map._place_fighter(self.fighters_details)
+                self.map._print_map()
+
+            elif received_data["Type"] == "Successful":
+                print(f"\n{received_data['Payload']}")
+                self._send_data()
 
             else:
                 print("DATA: ", received_data)
