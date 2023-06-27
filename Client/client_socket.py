@@ -44,6 +44,9 @@ class ClientSocket:
                 strategy_if["Payload"].append(strategy[0])
                 self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))                
 
+            elif received_data["Type"] == "Fighters":
+                print(received_data["Payload"])
+
             else:
                 print("DATA: ", received_data)
 
