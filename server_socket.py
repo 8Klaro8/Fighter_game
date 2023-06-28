@@ -77,6 +77,7 @@ class ServerSocket:
                         self.outgoing_queue.put(loggedin_if)
                         client.send(self._jsonify_data(self.outgoing_queue.get())
                                     .encode('utf-8'))
+                        self.outgoing_queue.task_done()
                         print("Logged in!")
                         # saved logged in users
                         i = self._get_user_by_client(client)
@@ -178,11 +179,16 @@ class ServerSocket:
                 # TODO send for only logged in uers
                 if client in self.sent_strategy_by_client:
                     client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
+                    self.outgoing_queue.task_done()
 
             except:
                 for user in self.connected_users:
                     if user["Client"] == client:
                         self.connected_users.remove(user)
+
+            finally:
+                self.outgoing_queue.get()
+                self.outgoing_queue.task_done()
 
     def _user_exists(self, register_payload) -> bool:
         """ Checks if user already exists """
