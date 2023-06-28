@@ -27,8 +27,19 @@ class ClientSocket:
                 break
             
             received_data = self._read_json(received_data.decode('utf-8'))
-            if received_data["Type"] == "Tick":
-                pass
+            if received_data["Type"] == "FighterUpdatePos":
+                self.fighters_details = []
+                for fighter in received_data["Payload"]:
+                    name = fighter[0]
+                    x_pos = fighter[1]
+                    y_pos = fighter[2]
+                    fighter_list = [name, x_pos, y_pos]
+                    if fighter_list not in self.fighters_details:
+                        self.fighters_details.append(fighter_list)
+                # print map with fighters on it
+                self.map._place_fighter(self.fighters_details)
+                self.map._print_map()
+
             elif received_data["Type"] == "Fail":
                 print("\n---------------------------\n"
                       f"{received_data['Payload'][0]}"
