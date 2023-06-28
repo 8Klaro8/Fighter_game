@@ -27,31 +27,50 @@ class Fighter:
 
         random_choice_zero = [0, -1]
         random_choice_one = [1, -1]
+        random_choice_plus = [0, 1]
 
         next_move_x = None
         next_move_y = None
 
-        if self._is_on_edge_x():
+        if self._is_on_edge_x_max():
             next_move_x = random.choice(random_choice_zero)
-            self.pos[0] = next_move_x
+            self.pos[0] = current_x + next_move_x
+
+        elif self._is_on_edge_x_min():
+            next_move_x = random.choice(random_choice_plus)
+            self.pos[0] = current_x + next_move_x
         else:
             new_x = random.choice(random_choice_one)
-            self.pos[0] = new_x
+            self.pos[0] = current_x + new_x
 
-        if self._is_on_edge_y():
+        if self._is_on_edge_y_max():
             next_move_y = random.choice(random_choice_zero)
-            self.pos[1] = next_move_y
+            self.pos[1] = current_y + next_move_y
+
+        elif self._is_on_edge_y_min():
+            next_move_y = random.choice(random_choice_plus)
+            self.pos[1] = current_y + next_move_y
         else:
             new_y = random.choice(random_choice_one)
-            self.pos[1] = new_y
+            self.pos[1] = current_y + new_y
 
-    def _is_on_edge_x(self) -> bool:
-        if self.pos[0] == 6:
+    def _is_on_edge_x_max(self) -> bool:
+        if self.pos[0] >= 6:
             return True
         return False
     
-    def _is_on_edge_y(self) -> bool:
-        if self.pos[1] == 6:
+    def _is_on_edge_x_min(self) -> bool:
+        if self.pos[0] <= 0:
+            return True
+        return False
+    
+    def _is_on_edge_y_max(self) -> bool:
+        if self.pos[1] >= 6:
+            return True
+        return False
+    
+    def _is_on_edge_y_min(self) -> bool:
+        if self.pos[1] <= 0:
             return True
         return False
 
