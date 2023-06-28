@@ -17,6 +17,7 @@ class ServerSocket:
         self.outgoing_queue = queue.Queue(10)
         self.auth = Authentication()
         self.fighters = []
+        self.sent_strategy_by_client = []
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,6 +43,9 @@ class ServerSocket:
             send_data_thread = threading.Thread(target=self._tick_data,
                                                 args=(client, ))
             send_data_thread.start()
+
+            # move_fighter_thread = threading.Thread(target=self._move_fighter)
+            # move_fighter_thread.start()
 
     def _receive_data(self, client):
         while True:
@@ -84,13 +88,16 @@ class ServerSocket:
                 elif data["Type"] == "Strategy":
                     strategy = data["Payload"]
                     print("RECEIEVING STRATEGY: ", strategy)
+
+                    # save strategy with clint to identify users who sent it already
+                    self.sent_strategy_by_client.append(client)
                     # creating fighter
                     i = self._get_user_by_client(client)
                     fighter_name = self.connected_users[i]["Username"]
                     fighter = Fighter(fighter_name, strategy)
                     self.fighters.append(fighter) # append created fihter to all fighter
                     # send all client all fighter pos
-                    self._broadcast_fighters_pos()
+                    self._broadcast_fighters_pos(client)
 
             except WindowsError as e:
                 try:
@@ -116,7 +123,8 @@ class ServerSocket:
                 #         if client == user["Client"]:
                 #             self.connected_users.remove(user)
 
-    def _broadcast_fighters_pos(self):
+    def _broadcast_fighters_pos(self, client):
+        """ Sends all fighters pos to clients """
         fighter_details_if = {"Type": "Fighters", "Payload": []}
         for fighter in self.fighters:
             fighter_details = {"Name": None, "Pos": None}
@@ -128,18 +136,15 @@ class ServerSocket:
         # self.outgoing_queue.put(fighter_details_if)
 
         for i in range(len(self.connected_users)):
-            self.connected_users[i]["Client"].send(self._jsonify_data(fighter_details_if)
-                                            .encode('utf-8'))
+            if client in self.sent_strategy_by_client:
+                self.connected_users[i]["Client"].send(self._jsonify_data(fighter_details_if)
+                                                .encode('utf-8'))
 
     def _get_user_by_client(self, client) -> int:
         """ Returns the int that represents the corresponding user """
         for i in range(len(self.connected_users)):
             if self.connected_users[i]["Client"] == client:
                 return i
-
-    def _send_fighters_pos(self):
-        """ Sends all fighters pos to clients """
-
 
     def _register_user(self, test_register_payload, client):
         user_exists_if = {"Type": "Fail", "Payload": ["User already exists."]}
@@ -159,13 +164,21 @@ class ServerSocket:
 
 
     def _tick_data(self, client):
-        tick_data_if = {"Type": "Tick", "Payload": ["EMPTY"]}
-        self.outgoing_queue.put(tick_data_if)
+
         while True:
             time.sleep(2)
-            # self.server_socket.sendall(json.dumps(tick_data_if).encode('utf-8'))
+            fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
+            
+            for fighter in self.fighters:
+                current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
+                fighters_pos_data["Payload"].append(current_fighter)
+            self.outgoing_queue.put(fighters_pos_data)
+
             try:
-                client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
+                # TODO send for only logged in uers
+                if client in self.sent_strategy_by_client:
+                    client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
+
             except:
                 for user in self.connected_users:
                     if user["Client"] == client:
