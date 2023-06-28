@@ -29,12 +29,15 @@ class Map:
         for i in range(len(self.map_array)):
             for j in range(len(self.map_array[i])):
                 if j == (len(self.map_array[i]) - 1):
+                    print(self.map_array[i][j], end="")
                     print("\n______________________")
                 else:
                     print(self.map_array[i][j], end="")
         self.map_array = []
 
     def _place_fighter(self, fighters):
+
+        # fighters = [['a', 6, 4]]
 
         column_array = []
         added_this_round = False
@@ -60,7 +63,6 @@ class Map:
             column_array = []
 
     def _place_fighter1(self, fighters):
-        # TODO fix map!
         # fighter_data = []
         # for fighter in fighters:
         #     name = fighter[0]
