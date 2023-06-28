@@ -167,28 +167,36 @@ class ServerSocket:
     def _tick_data(self, client):
 
         while True:
+            wait_list = []
             time.sleep(2)
             fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
+
+            # move fighters
+            for fighter in self.fighters:
+                fighter._random_moving()
             
             for fighter in self.fighters:
                 current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
                 fighters_pos_data["Payload"].append(current_fighter)
-            self.outgoing_queue.put(fighters_pos_data)
+
+            # self.outgoing_queue.put(fighters_pos_data)
+            wait_list.append(fighters_pos_data)
 
             try:
                 # TODO send for only logged in uers
                 if client in self.sent_strategy_by_client:
-                    client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
-                    self.outgoing_queue.task_done()
+                    client.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                    # client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
+                    # self.outgoing_queue.task_done()
 
             except:
                 for user in self.connected_users:
                     if user["Client"] == client:
                         self.connected_users.remove(user)
 
-            finally:
-                self.outgoing_queue.get()
-                self.outgoing_queue.task_done()
+            # finally:
+            #     self.outgoing_queue.get()
+            #     self.outgoing_queue.task_done()
 
     def _user_exists(self, register_payload) -> bool:
         """ Checks if user already exists """
