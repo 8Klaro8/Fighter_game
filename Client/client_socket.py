@@ -34,6 +34,7 @@ class ClientSocket:
                     x_pos = fighter[1]
                     y_pos = fighter[2]
                     fighter_list = [name, x_pos, y_pos]
+                    print("FIGHT_LIST: ", fighter_list)
                     if fighter_list not in self.fighters_details:
                         self.fighters_details.append(fighter_list)
                 # print map with fighters on it
