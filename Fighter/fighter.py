@@ -8,11 +8,18 @@ class Fighter:
         self.defense = 1
         self.strategy = strategy
         self.pos = ()
+        self.move_updated = False
         self._random_pos()
 
-    def _attack(self):
+    def _attack(self, opponent):
         """ Attacks other fighter """
-        pass
+        opponent._get_damage(self.attack)
+
+    def _get_damage(self, dmg: int):
+        """ Receives dmg by other fighter """
+        self.health = self.health - dmg
+        if self.health <= 0:
+            print("---DEAD---")
 
     def _can_attack(self):
         pass
