@@ -7,7 +7,8 @@ class Map:
     & dispalys new status of the map"""
     def __init__(self) -> None:
         self.coordinates = None
-        self.map_size = {"x": 7, "y": 7}
+        self.table_size = 2
+        self.map_size = {"x": self.table_size, "y": self.table_size}
         self.map_array = []
 
     def _update_map(self):
@@ -56,7 +57,7 @@ class Map:
                     column_array.append("  |")
                     added_in_a_fighters_round = True
 
-            if column == 7:
+            if column == self.table_size:
                 column_array.append("  |")
 
             self.map_array.append(column_array)
@@ -81,7 +82,7 @@ class Map:
             for column in range(self.map_size["x"]):
                 _name_added = False
                 if len(fighters) == 0:
-                    if not _name_added and len(column_array) <= 7:
+                    if not _name_added and len(column_array) <= self.table_size:
                         column_array.append("  |")
                         _name_added = False
 
@@ -91,17 +92,17 @@ class Map:
                 for fig in fighters:
                     _added_this_round = False
                     _name_added = False
-                    if row == fig[2] and column == fig[1] and len(column_array) <= 7:
+                    if row == fig[2] and column == fig[1] and len(column_array) <= self.table_size:
                         column_array.append(f" {fig[0][:1]}|")
                         fighters.remove(fig)
                         _name_added = True
                     # else:
-                    if not _name_added and len(column_array) <= 7:
+                    if not _name_added and len(column_array) <= self.table_size:
                         column_array.append("  |")
                         _name_added = False
                         _added_this_round = True
 
-                    if len(fighters) == 1 and column == 6 and len(column_array) <= 7 and not _added_this_round:
+                    if len(fighters) == 1 and column == 6 and len(column_array) <= self.table_size and not _added_this_round:
                         column_array.append("  |")
 
             self.map_array.append(column_array)
