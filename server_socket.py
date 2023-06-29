@@ -3,9 +3,6 @@ from Database.database import Database
 from Authentication.auth import Authentication
 from Fighter.fighter import Fighter
 
-# class OutgoingQueue:
-#     def __init__(self) -> None:
-#         self.outgoing_queue = queue.Queue()
 
 class ServerSocket:
     def __init__(self, port, host) -> None:
@@ -19,15 +16,15 @@ class ServerSocket:
         self.fighters = []
         self.sent_strategy_by_client = []
         self.tick_counter = 0
+        self.same_pos = []
+        self.same_pos_added = False
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.HOST, self.PORT))
         self.server_socket.listen()
         print("Server is listening...")
-
         self._accept_new_connections()
-        # self._register_user()
 
     def _accept_new_connections(self):
         while True:
@@ -45,9 +42,6 @@ class ServerSocket:
                                                 args=(client, ))
             send_data_thread.start()
 
-            # move_fighter_thread = threading.Thread(target=self._move_fighter)
-            # move_fighter_thread.start()
-
     def _receive_data(self, client):
         while True:
             try:
@@ -57,49 +51,7 @@ class ServerSocket:
                 data = self._read_json(data.decode('utf-8'))
                 print("RECEIVED DATA: ", data)
 
-                if data["Type"] == "Register":
-                    print("Register request...")
-                    self._register_user(data, client)
-
-                elif data["Type"] == "Login":
-                    print("Login request...")
-                    username = data["Payload"][0]["Username"]
-                    password = data["Payload"][0]["Password"]
-                    if not self.auth._auth_logging_user(username, password):
-                        print("Wrong password...")
-                        wrong_password_if = {"Type": "Fail",
-                                             "Payload": ["Wrong password."]}
-                        self.outgoing_queue.put(wrong_password_if)
-                        client.send(self._jsonify_data(self.outgoing_queue.get())
-                                    .encode('utf-8'))
-                    else:
-                        loggedin_if = {"Type": "Logged",
-                                       "Payload": ["Successfuly logged in!"]}
-                        self.outgoing_queue.put(loggedin_if)
-                        client.send(self._jsonify_data(self.outgoing_queue.get())
-                                    .encode('utf-8'))
-                        self.outgoing_queue.task_done()
-                        print("Logged in!")
-                        # saved logged in users
-                        i = self._get_user_by_client(client)
-                        self.connected_users[i]["Username"] = username
-
-                elif data["Type"] == "Action":
-                    print("Action request...")
-
-                elif data["Type"] == "Strategy":
-                    strategy = data["Payload"]
-                    print("RECEIEVING STRATEGY: ", strategy)
-
-                    # save strategy with clint to identify users who sent it already
-                    self.sent_strategy_by_client.append(client)
-                    # creating fighter
-                    i = self._get_user_by_client(client)
-                    fighter_name = self.connected_users[i]["Username"]
-                    fighter = Fighter(fighter_name, strategy)
-                    self.fighters.append(fighter) # append created fighter to all fighter
-                    # send all client all fighter pos
-                    # self._broadcast_fighters_pos(client)
+                self._process_incoming_data(data, client)
 
             except WindowsError as e:
                 try:
@@ -117,13 +69,50 @@ class ServerSocket:
                     print(ex)
                     # remove client
                     self.connected_users.pop(i)
-                    print("USERRS: ", self.connected_users)
+                    print("USERS: ", self.connected_users)
                 break
-                # else:
-                #     print(f"{client} has left...")
-                #     for user in self.connected_users:
-                #         if client == user["Client"]:
-                #             self.connected_users.remove(user)
+
+    def _process_incoming_data(self, data, client):
+        if data["Type"] == "Register":
+                print("Register request...")
+                self._register_user(data, client)
+
+        elif data["Type"] == "Login":
+            print("Login request...")
+            username = data["Payload"][0]["Username"]
+            password = data["Payload"][0]["Password"]
+            if not self.auth._auth_logging_user(username, password):
+                print("Wrong password...")
+                wrong_password_if = {"Type": "Fail",
+                                        "Payload": ["Wrong password."]}
+                self.outgoing_queue.put(wrong_password_if)
+                client.send(self._jsonify_data(self.outgoing_queue.get())
+                            .encode('utf-8'))
+            else:
+                loggedin_if = {"Type": "Logged",
+                                "Payload": ["Successfuly logged in!"]}
+                self.outgoing_queue.put(loggedin_if)
+                client.send(self._jsonify_data(self.outgoing_queue.get())
+                            .encode('utf-8'))
+                self.outgoing_queue.task_done()
+                print("Logged in!")
+                # saved logged in users
+                i = self._get_user_by_client(client)
+                self.connected_users[i]["Username"] = username
+
+        elif data["Type"] == "Action":
+            print("Action request...")
+
+        elif data["Type"] == "Strategy":
+            strategy = data["Payload"]
+            print("RECEIEVING STRATEGY: ", strategy)
+            # save strategy with clint to identify users who sent it already
+            self.sent_strategy_by_client.append(client)
+            # creating fighter
+            i = self._get_user_by_client(client)
+            fighter_name = self.connected_users[i]["Username"]
+            fighter = Fighter(fighter_name, strategy)
+            self.fighters.append(fighter) # append created fighter to all fighter
 
     def _broadcast_fighters_pos(self, client):
         """ Sends all fighters pos to clients """
@@ -151,8 +140,6 @@ class ServerSocket:
     def _register_user(self, test_register_payload, client):
         user_exists_if = {"Type": "Fail", "Payload": ["User already exists."]}
         successful_reg_if = {"Type": "Successful", "Payload": ["Successful registration!"]}
-        # test_register_payload = {"Type": "Register",
-        #                          "Payload": [{"Username": "Kakao", "Password": "123"}]}
         
         if not self._user_exists(test_register_payload):
             print("Saving new user...")
@@ -168,75 +155,59 @@ class ServerSocket:
         while True:
             wait_list = []
             fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
+            self.same_pos_added = False
 
-
+            # move fighters every 3rd tick
             if self.tick_counter >= 3:
-                # self._fighters_move_false()
                 self._move_fighters()
-            
+
             for fighter in self.fighters:
-                current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
-                fighters_pos_data["Payload"].append(current_fighter)
-            time.sleep(1)
+                if fighter not in self.same_pos: # append new pos data if not in same pos
+                    current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
+                    fighters_pos_data["Payload"].append(current_fighter)
+                else:
+                    if not self.same_pos_added:
+                        current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
+                        fighters_pos_data["Payload"].append(current_fighter)
+                        self.same_pos_added = True
+
+            # process fight
+            if len(self.same_pos) > 1:
+                for fighter in self.same_pos:
+                    for fighter_2 in self.same_pos:
+                        if fighter != fighter_2:
+                            fighter._attack(fighter_2)
+                            fighter_2._attack(fighter)
+                            print("---ATTACK---")
+                            break
+                        break
+
+            self.same_pos = []
+
+            time.sleep(0.2)
             wait_list.append(fighters_pos_data)
             try:
                 if client in self.sent_strategy_by_client:
                     client.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                     self.tick_counter += 1
             except:
-                # for user in self.connected_users:
-                #     if user["Client"] == client:
-                #         self.connected_users.remove(user)
                 pass
-
-
-    def _tick_data1(self, client):
-        while True:
-            wait_list = []
-            time.sleep(10)
-            fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
-
-            # move fighters
-            if self.tick_counter >= 10:
-                # self._fighters_move_false()
-                self._move_fighters()
-            
-            for fighter in self.fighters:
-                current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
-                fighters_pos_data["Payload"].append(current_fighter)
-
-            # self.outgoing_queue.put(fighters_pos_data)
-            print("--------")
-            print("FIGHT_DATA:", fighters_pos_data["Payload"])
-            wait_list.append(fighters_pos_data)
-
-            try:
-                # TODO send for only logged in uers
-                if client in self.sent_strategy_by_client:
-                    client.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
-                    
-                    # client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
-                    # self.outgoing_queue.task_done()
-
-            except:
-                for user in self.connected_users:
-                    if user["Client"] == client:
-                        self.connected_users.remove(user)
 
     def _move_fighters(self):
         for fighter in self.fighters:
-            # if fighter.move_updated == False:
                 fighter._random_moving()
-        self.tick_counter = 0
-                # fighter.move_updated = True
 
-    def _fighters_move_false(self):
+        # check if fighters at the same pos
         for fighter in self.fighters:
-            fighter.move_updated = False
-
-            # finally:
-            #     self.outgoing_queue.get()
-            #     self.outgoing_queue.task_done()
+            for fighter_2 in self.fighters:
+                if fighter.pos == fighter_2.pos and fighter != fighter_2:
+                    if fighter not in self.same_pos:
+                        self.same_pos.append(fighter)
+                    if fighter_2 not in self.same_pos:
+                        self.same_pos.append(fighter_2)
+                    print("Fighters appended")
+        
+        self.tick_counter = 0
 
     def _user_exists(self, register_payload) -> bool:
         """ Checks if user already exists """
