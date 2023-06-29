@@ -3,6 +3,7 @@ import random
 class Fighter:
     def __init__(self, name, strategy) -> None:
         self.health = 10
+        self.moving_range = 1
         self.name = name
         self.attack = 3
         self.defense = 1
@@ -62,7 +63,7 @@ class Fighter:
             self.pos[1] = current_y + new_y
 
     def _is_on_edge_x_max(self) -> bool:
-        if self.pos[0] >= 6:
+        if self.pos[0] >= self.moving_range:
             return True
         return False
     
@@ -72,7 +73,7 @@ class Fighter:
         return False
     
     def _is_on_edge_y_max(self) -> bool:
-        if self.pos[1] >= 6:
+        if self.pos[1] >= self.moving_range:
             return True
         return False
     
@@ -83,6 +84,6 @@ class Fighter:
 
     def _random_pos(self) -> list:
         """ Saves a random position for a fighter """
-        x_pos = random.randint(0,6)
-        y_pos = random.randint(0,6)
+        x_pos = random.randint(0,self.moving_range)
+        y_pos = random.randint(0,self.moving_range)
         self.pos = [x_pos, y_pos]
