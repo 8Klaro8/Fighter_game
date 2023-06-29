@@ -168,30 +168,37 @@ class ServerSocket:
                 else:
                     if not self.same_pos_added:
                         current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
+                        fighters_pos_data["Payload"] = []
                         fighters_pos_data["Payload"].append(current_fighter)
                         self.same_pos_added = True
 
             # process fight
+            attacked_this_round = False
             if len(self.same_pos) > 1:
                 for fighter in self.same_pos:
                     for fighter_2 in self.same_pos:
                         if fighter != fighter_2:
-                            fighter._attack(fighter_2)
-                            fighter_2._attack(fighter)
-                            print("---ATTACK---")
+                            # fighter._attack(fighter_2)
+                            # fighter_2._attack(fighter)
+                            if not attacked_this_round:
+                                fighter.health = fighter.health - 3
+                                fighter_2.health = fighter_2.health - 3
+                                print("---ATTACK---")
+                                attacked_this_round = True
                             break
                         break
 
             self.same_pos = []
 
-            time.sleep(0.2)
             wait_list.append(fighters_pos_data)
             try:
-                if client in self.sent_strategy_by_client:
-                    client.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                # if client in self.sent_strategy_by_client:
+                for cli in self.sent_strategy_by_client:
+                    cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                     self.tick_counter += 1
             except:
                 pass
+            time.sleep(0.5)
 
     def _move_fighters(self):
         for fighter in self.fighters:
@@ -205,7 +212,7 @@ class ServerSocket:
                         self.same_pos.append(fighter)
                     if fighter_2 not in self.same_pos:
                         self.same_pos.append(fighter_2)
-                    print("Fighters appended")
+                    print("Fighters same pos.")
         
         self.tick_counter = 0
 
