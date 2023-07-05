@@ -18,6 +18,7 @@ class ServerSocket:
         self.tick_counter = 0
         self.same_pos = []
         self.same_pos_added = False
+        self.attacked_this_round = False
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -124,7 +125,6 @@ class ServerSocket:
             fighter_details["Name"] = name
             fighter_details["Pos"] = pos
             fighter_details_if["Payload"].append(fighter_details)
-        # self.outgoing_queue.put(fighter_details_if)
 
         for i in range(len(self.connected_users)):
             if client in self.sent_strategy_by_client:
@@ -138,6 +138,8 @@ class ServerSocket:
                 return i
 
     def _register_user(self, test_register_payload, client):
+        """ Processes registering user. Either registers if not exists
+        or sends user exists message. """
         user_exists_if = {"Type": "Fail", "Payload": ["User already exists."]}
         successful_reg_if = {"Type": "Successful", "Payload": ["Successful registration!"]}
         
@@ -158,53 +160,73 @@ class ServerSocket:
             self.same_pos_added = False
 
             # move fighters every 3rd tick
-            if self.tick_counter >= 3:
+            if self.tick_counter >= 2:
                 self._move_fighters()
+                self._proccess_fight()
 
+            self._fighter_same_pos()
             for fighter in self.fighters:
                 if fighter not in self.same_pos: # append new pos data if not in same pos
                     current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
                     fighters_pos_data["Payload"].append(current_fighter)
-                else:
+                else: # if two or more fighters meet then displays 'x' once! 
                     if not self.same_pos_added:
                         current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
                         fighters_pos_data["Payload"] = []
                         fighters_pos_data["Payload"].append(current_fighter)
                         self.same_pos_added = True
 
-            # process fight
-            attacked_this_round = False
-            if len(self.same_pos) > 1:
-                for fighter in self.same_pos:
-                    for fighter_2 in self.same_pos:
-                        if fighter != fighter_2:
-                            # fighter._attack(fighter_2)
-                            # fighter_2._attack(fighter)
-                            if not attacked_this_round:
-                                fighter.health = fighter.health - 3
-                                fighter_2.health = fighter_2.health - 3
-                                print("---ATTACK---")
-                                attacked_this_round = True
-                            break
-                        break
+            self.same_pos = [] # reset same pos
 
-            self.same_pos = []
+            wait_list.append(fighters_pos_data) # add data to temp. holder
+            if len(wait_list[0]["Payload"]) > 0: # checks if payload is not empty
+                if not self._check_if_same_pos_but_diff_symbol(fighters_pos_data):
+                    try:
+                        # if client in self.sent_strategy_by_client:
+                        for cli in self.sent_strategy_by_client:
+                            cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                            self.attacked_this_round = False # reset fight
 
-            wait_list.append(fighters_pos_data)
-            try:
-                # if client in self.sent_strategy_by_client:
-                for cli in self.sent_strategy_by_client:
-                    cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
-                    self.tick_counter += 1
-            except:
-                pass
-            time.sleep(0.5)
+                    except:
+                        pass
+            self.tick_counter += 1 # add to tick counter 
+            time.sleep(1)
+
+    def _proccess_fight(self):
+        """ Deducts dmg from life """
+        if len(self.same_pos) > 1:
+            for fighter in self.same_pos:
+                for fighter_2 in self.same_pos:
+                    if fighter != fighter_2:
+                                # fighter._attack(fighter_2)
+                                # fighter_2._attack(fighter)
+                        if not self.attacked_this_round:
+                            fighter.health = fighter.health - 3
+                            fighter_2.health = fighter_2.health - 3
+                            print("---ATTACK---")
+                            self.attacked_this_round = True
+
+    def _check_if_same_pos_but_diff_symbol(self, fighters_pos_data) -> bool:
+        """ If there are more fighters in the payload
+        with the same postion, then return True"""
+        if len(fighters_pos_data["Payload"]) > 1:
+            for data_1 in fighters_pos_data["Payload"]:
+                for data_2 in fighters_pos_data["Payload"]:
+                    if data_1 != data_2 and \
+                        data_1[1] == data_2[1] and \
+                            data_1[2] == data_2[2]:
+                        return True
+        return False
 
     def _move_fighters(self):
+        """ Moves all fighters to a random position
+        (one step to a close field) and resets tick counter """
         for fighter in self.fighters:
                 fighter._random_moving()
+        self.tick_counter = 0 # 'reset' tick counter
 
-        # check if fighters at the same pos
+    def _fighter_same_pos(self):
+        """ Puts fighters in a list if they are at the same position """
         for fighter in self.fighters:
             for fighter_2 in self.fighters:
                 if fighter.pos == fighter_2.pos and fighter != fighter_2:
@@ -212,9 +234,8 @@ class ServerSocket:
                         self.same_pos.append(fighter)
                     if fighter_2 not in self.same_pos:
                         self.same_pos.append(fighter_2)
-                    print("Fighters same pos.")
-        
-        self.tick_counter = 0
+                    print("---Fighters same pos---")
+                    break
 
     def _user_exists(self, register_payload) -> bool:
         """ Checks if user already exists """
@@ -233,15 +254,6 @@ class ServerSocket:
     
     def _read_json(self, data) -> bool:
         return json.loads(data)
-    
-    # def _read_users_json(self) -> dict | None:
-    #     with open("users.json", "r") as file:
-    #         try:
-    #             content = json.load(file)
-    #         except json.JSONDecodeError:
-    #             print("Users file is empty.")
-    #             return None
-    #     return content
 
 
 test_data = {"Type": "Register",
