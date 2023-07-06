@@ -159,14 +159,15 @@ class ServerSocket:
             wait_list = []
             fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
             self.same_pos_added = False
-            duel_manager = DuelManager(self.fighters)
+            # duel_manager = DuelManager(self.fighters)
 
             # move fighters every 3rd tick
             if self.tick_counter >= 2:
                 self._move_fighters()
                 self._fighter_same_pos()
                 # self._proccess_fight()
-                duel_manager.process_fight()
+                # if len(self.same_pos) > 1:
+                #     duel_manager.process_fight()
 
             # self._fighter_same_pos()
             for fighter in self.fighters:
@@ -236,12 +237,32 @@ class ServerSocket:
         for fighter in self.fighters:
             for fighter_2 in self.fighters:
                 if fighter.pos == fighter_2.pos and fighter != fighter_2:
-                    if fighter not in self.same_pos:
+                    if not self._fighter_in_same_pos(fighter):
+                    # if fighter not in self.same_pos:
                         self.same_pos.append(fighter)
-                    if fighter_2 not in self.same_pos:
+                    if not self._fighter_in_same_pos(fighter_2):
+                    # if fighter_2 not in self.same_pos:
                         self.same_pos.append(fighter_2)
                     print("---Fighters same pos---")
+                    duel_manager = DuelManager(self.fighters)
+                    duel_manager.process_fight()
+                    self._check_liveness_of_fighters()
                     break
+            break
+
+    def _check_liveness_of_fighters(self):
+        for fighter in self.fighters:
+            if fighter.health <= 0:
+                self.fighters.remove(fighter)
+
+    def _fighter_in_same_pos(self, fighter) -> bool:
+        """ Checks if fighter is already appended in self.same_pos"""
+        fighter_name = fighter.name
+        for fighter in self.same_pos:
+            same_pos_fighter_name = fighter.name
+            if fighter_name == same_pos_fighter_name:
+                return True
+        return False
 
     def _user_exists(self, register_payload) -> bool:
         """ Checks if user already exists """
