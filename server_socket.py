@@ -2,6 +2,7 @@ import socket, json, threading, time, queue
 from Database.database import Database
 from Authentication.auth import Authentication
 from Fighter.fighter import Fighter
+from Fighter.duel_manager import DuelManager 
 
 
 class ServerSocket:
@@ -158,13 +159,16 @@ class ServerSocket:
             wait_list = []
             fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
             self.same_pos_added = False
+            duel_manager = DuelManager(self.fighters)
 
             # move fighters every 3rd tick
             if self.tick_counter >= 2:
                 self._move_fighters()
-                self._proccess_fight()
+                self._fighter_same_pos()
+                # self._proccess_fight()
+                duel_manager.process_fight()
 
-            self._fighter_same_pos()
+            # self._fighter_same_pos()
             for fighter in self.fighters:
                 if fighter not in self.same_pos: # append new pos data if not in same pos
                     current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
@@ -201,6 +205,8 @@ class ServerSocket:
                                 # fighter._attack(fighter_2)
                                 # fighter_2._attack(fighter)
                         if not self.attacked_this_round:
+                            print("FIHTER 1: ", fighter.strategy)
+                            print("FIHTER 2: ", fighter_2.strategy)
                             fighter.health = fighter.health - 3
                             fighter_2.health = fighter_2.health - 3
                             print("---ATTACK---")
