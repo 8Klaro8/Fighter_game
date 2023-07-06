@@ -113,7 +113,7 @@ class ServerSocket:
             # creating fighter
             i = self._get_user_by_client(client)
             fighter_name = self.connected_users[i]["Username"]
-            fighter = Fighter(fighter_name, strategy)
+            fighter = Fighter(fighter_name, strategy, client)
             self.fighters.append(fighter) # append created fighter to all fighter
 
     def _broadcast_fighters_pos(self, client):
@@ -251,9 +251,20 @@ class ServerSocket:
             break
 
     def _check_liveness_of_fighters(self):
+        """ Removes fighter if health is <= 0 """
+        death_if = {"Type": "Died", "Payload": ["Your fighter died."]}
+        wait_list = []
+        wait_list.append(death_if)
+
         for fighter in self.fighters:
             if fighter.health <= 0:
+                # sending death signal to user
+                dead_user = fighter.matching_client
+                dead_user.send(self._jsonify_data(wait_list[0])
+                            .encode('utf-8'))
                 self.fighters.remove(fighter)
+                self.sent_strategy_by_client.remove(dead_user)
+                print()
 
     def _fighter_in_same_pos(self, fighter) -> bool:
         """ Checks if fighter is already appended in self.same_pos"""
