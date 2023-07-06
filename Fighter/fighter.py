@@ -7,10 +7,19 @@ class Fighter:
         self.name = name
         self.attack = 3
         self.defense = 1
+        self.miss_chance = 10
         self.strategy = strategy
         self.pos = ()
         self.move_updated = False
         self._random_pos()
+
+    def _perried_attack(self) -> bool:
+        """ Returns True if missed """
+        chance_of_getting_hit = random.randint(0,100)
+        for num in range(1, (self.miss_chance + 1)):
+            if num == chance_of_getting_hit:
+                return True
+        return False
 
     def _attack(self, opponent):
         """ Attacks other fighter """
@@ -18,9 +27,12 @@ class Fighter:
 
     def _get_damage(self, dmg: int):
         """ Receives dmg by other fighter """
-        self.health = self.health - dmg
-        if self.health <= 0:
-            print("---DEAD---")
+        if not self._perried_attack():
+            self.health = (self.health + self.defense) - dmg
+            if self.health <= 0:
+                print("---DEAD---")
+        else:
+            print("Perried!")
 
     def _can_attack(self):
         pass
