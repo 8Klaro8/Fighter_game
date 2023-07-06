@@ -76,6 +76,15 @@ class ClientSocket:
                 print(f"\n{received_data['Payload']}")
                 self._send_data()
 
+            elif received_data["Type"] == "Died":
+                print("You Died!")
+                strategy_if = {"Type": "Strategy", "Payload": []}
+                strategy = self.choose_strategy.choose_option()
+                print("SENDING STRATEGY: ", strategy)
+                # send strategy to server
+                strategy_if["Payload"].append(strategy[0])
+                self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))     
+
             else:
                 print("DATA: ", received_data)
 
@@ -93,6 +102,7 @@ class ClientSocket:
         return json.dumps(data)
     
     def _read_json(self, data) -> bool:
+        # TODO dont send data if fighter is dead
         return json.loads(data)
 
 
