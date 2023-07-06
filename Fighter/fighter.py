@@ -1,9 +1,9 @@
 import random
 
 class Fighter:
-    def __init__(self, name, strategy) -> None:
-        self.health = 10
-        self.moving_range = 1
+    def __init__(self, name, strategy, client) -> None:
+        self.health = 5
+        self.moving_range = 4
         self.name = name
         self.attack = 3
         self.defense = 1
@@ -13,17 +13,24 @@ class Fighter:
         self.move_updated = False
         self._defense_boosted = False
         self._miss_chance_boosted = False
+        self.matching_client = client
         self._random_pos()
 
-    def _boost_defense(self, extra_def):
-        self.defense += extra_def
+    def _boost_defense(self, extra_def: int, attack_deduct_by_def: int):
+        """ Boosts defense and deducts from attack """
+        self.defense += extra_def # boost defense
+        self.attack -= attack_deduct_by_def # deduct from attack becase of def
         self._defense_boosted = True
 
     def _boost_miss_chance(self, extra_miss_chance):
+        """ Boosts the chance to perry dmg """
         self.miss_chance += extra_miss_chance
+        self.attack = 0 # set attack to 0 because of running
         self._miss_chance_boosted = True
 
     def _reset_defaults(self):
+        """ resets all attributes to default """
+        self.attack = 3
         self.miss_chance = 1
         self.defense = 1
         self._defense_boosted = False
