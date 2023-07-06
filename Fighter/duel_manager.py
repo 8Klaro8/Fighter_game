@@ -8,7 +8,8 @@ class DuelManager:
         self.events = ["Fighter nearby", "2 fighters nearby", "In corner"]
         self.fighters = fighters
         self.extra_defense = 1
-        self.miss_chance = 5
+        self.attack_deduct_by_def = 1
+        self.miss_chance = 8
 
     def process_fight(self):
         """ Applies run and defense action and
@@ -22,17 +23,16 @@ class DuelManager:
         for fighter in self.fighters:
             fighter._reset_defaults()
             strategy_payload = fighter.strategy
-            print(strategy_payload)
             for strategy in strategy_payload:
                 action = strategy["Action"]
                 if action == "Run":
-                    if not fighter._boost_miss_chance:
+                    if not fighter._miss_chance_boosted:
                         print("Raise chance of not getting hit")
                         fighter._boost_miss_chance(self.miss_chance)
                         break
                 elif action == "Defend":
                     if not fighter._defense_boosted:
-                        fighter._boost_defense(self.extra_defense)
+                        fighter._boost_defense(self.extra_defense, self.attack_deduct_by_def)
                         break
 
     def _process_duel(self):
@@ -46,9 +46,16 @@ class DuelManager:
                         fighter_2._attack(fighter)
                         is_duel_done = True
                         print("Duel's Done!")
-                        print("Fighter 1 health: ", fighter.health)
-                        print("Fighter 2 health: ", fighter_2.health)
-                        break
+                        print(f"Fighter '{fighter.name}' - health: {fighter.health}, "
+                                f"attack: {fighter.attack}, "
+                                f"defense: {fighter.defense}, "
+                                f"miss chance: {fighter.miss_chance}")
+                        print(f"Fighter '{fighter_2.name}' health: {fighter_2.health}, "
+                                f"attack: {fighter_2.attack}, "
+                                f"defense: {fighter_2.defense}, "
+                                f"miss chance: {fighter_2.miss_chance}")
+                        if is_duel_done:
+                            break
                 break
             break
 
