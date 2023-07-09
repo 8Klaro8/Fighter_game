@@ -1,4 +1,4 @@
-import socket, json, threading, time, queue
+import socket, json, threading, time, queue, random
 from Database.database import Database
 from Authentication.auth import Authentication
 from Fighter.fighter import Fighter
@@ -20,6 +20,7 @@ class ServerSocket:
         self.same_pos = []
         self.same_pos_added = False
         self.attacked_this_round = False
+        self.round_time = 1.5
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -40,8 +41,7 @@ class ServerSocket:
                                                    args=(client, ))
             receive_data_thread.start()
 
-            send_data_thread = threading.Thread(target=self._tick_data,
-                                                args=(client, ))
+            send_data_thread = threading.Thread(target=self._tick_data)
             send_data_thread.start()
 
     def _receive_data(self, client):
@@ -154,22 +154,22 @@ class ServerSocket:
             print("User already exists...")
             client.send(self._jsonify_data(self.outgoing_queue.get()).encode('utf-8'))
 
-    def _tick_data(self, client):
+    def _tick_data(self):
         while True:
+            # shuffle fighters to select fighters evenly
+            random.shuffle(self.fighters)
+            # set fighters move range depending on how much fighters are there
+            self._set_moving_range_by_player_num()
+
             wait_list = []
             fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
             self.same_pos_added = False
-            # duel_manager = DuelManager(self.fighters)
 
             # move fighters every 3rd tick
             if self.tick_counter >= 2:
                 self._move_fighters()
                 self._fighter_same_pos()
-                # self._proccess_fight()
-                # if len(self.same_pos) > 1:
-                #     duel_manager.process_fight()
 
-            # self._fighter_same_pos()
             for fighter in self.fighters:
                 if fighter not in self.same_pos: # append new pos data if not in same pos
                     current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
@@ -195,7 +195,18 @@ class ServerSocket:
                     except:
                         pass
             self.tick_counter += 1 # add to tick counter 
-            time.sleep(1)
+            time.sleep(self.round_time)
+
+    def _set_moving_range_by_player_num(self):
+        if len(self.fighters) <= 2:
+            for fighter in self.fighters:
+                fighter.moving_range = 2
+        elif len(self.fighters) <= 3:
+            for fighter in self.fighters:
+                fighter.moving_range = 3
+        elif len(self.fighters) <= 5:
+            for fighter in self.fighters:
+                fighter.moving_range = 4
 
     def _proccess_fight(self):
         """ Deducts dmg from life """
@@ -232,8 +243,13 @@ class ServerSocket:
                 fighter._random_moving()
         self.tick_counter = 0 # 'reset' tick counter
 
+    def _set_same_post_to_all_fighter(self):
+        for fighter in self.fighters:
+            fighter.pos = [0,0]
+
     def _fighter_same_pos(self):
         """ Puts fighters in a list if they are at the same position """
+        # self._set_same_post_to_all_fighter()
         for fighter in self.fighters:
             for fighter_2 in self.fighters:
                 if fighter.pos == fighter_2.pos and fighter != fighter_2:
@@ -244,11 +260,11 @@ class ServerSocket:
                     # if fighter_2 not in self.same_pos:
                         self.same_pos.append(fighter_2)
                     print("---Fighters same pos---")
-                    duel_manager = DuelManager(self.fighters)
-                    duel_manager.process_fight()
-                    self._check_liveness_of_fighters()
-                    break
-            break
+        duel_manager = DuelManager(self.same_pos)
+        duel_manager.process_fight()
+        self._check_liveness_of_fighters()
+            #         break
+            # break
 
     def _check_liveness_of_fighters(self):
         """ Removes fighter if health is <= 0 """
