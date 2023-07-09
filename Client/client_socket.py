@@ -1,6 +1,6 @@
 
 
-import socket, json, threading
+import socket, json, threading, random
 from Authentication.auth import Authentication
 from Client.strategy import ChooseStrategy
 from Client.arena import Map
@@ -29,6 +29,9 @@ class ClientSocket:
             received_data = self._read_json(received_data.decode('utf-8'))
             if received_data["Type"] == "FighterUpdatePos":
                 self.fighters_details = []
+                # check how much fighters are there
+                self._set_map_size_by_player_num(received_data)
+                
                 for fighter in received_data["Payload"]:
                     name = fighter[0]
                     x_pos = fighter[1]
@@ -54,13 +57,18 @@ class ClientSocket:
                 strategy = self.choose_strategy.choose_option()
                 print("SENDING STRATEGY: ", strategy)
                 # send strategy to server
-                strategy_if["Payload"].append(strategy[0])
+                # append each chosen strategy to if.
+                for strat in strategy:
+                    strategy_if["Payload"].append(strat)
+                print(strategy_if)
+                # strategy_if["Payload"].append(strategy[0])
                 self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))                
 
             elif received_data["Type"] == "Fighters":
                 print(f"\n{received_data['Payload']}")
                 # save fighters
                 self.fighters_details = []
+                # get out name, and positions from each fighter to draw the map
                 for fighter in received_data["Payload"]:
                     name = fighter["Name"]
                     x_pos = fighter["Pos"][0]
@@ -87,6 +95,18 @@ class ClientSocket:
 
             else:
                 print("DATA: ", received_data)
+
+    def _set_map_size_by_player_num(self, received_data):
+        if len(received_data["Payload"]) <= 2:
+            self.map.map_size['x'] = 3
+            self.map.map_size['y'] = 3
+            print("MAP SIZE 2: ", self.map.table_size)
+        elif len(received_data["Payload"]) <= 3:
+            self.map.map_size['x'] = 4
+            self.map.map_size['y'] = 4
+        elif len(received_data["Payload"]) <= 5:
+            self.map.map_size['x'] = 5
+            self.map.map_size['y'] = 5
 
     def _send_data(self):
         # data = {"Type": "Action", "Strategy": "YOYO"}
