@@ -97,7 +97,7 @@ class ServerSocket:
                 client.send(self._jsonify_data(self.outgoing_queue.get())
                             .encode('utf-8'))
                 self.outgoing_queue.task_done()
-                print("Logged in!")
+                print(f"'{username}' Logged in!")
                 # saved logged in users
                 i = self._get_user_by_client(client)
                 self.connected_users[i]["Username"] = username
@@ -173,20 +173,21 @@ class ServerSocket:
                 self._fighter_same_pos()
                 duel_manager = DuelManager(self.same_pos)
                 duel_manager.process_fight()
+                self._process_fighter_payload(fighters_pos_data)
                 self._check_liveness_of_fighters()
 
             self.tick_counter += 1 # add to tick counter 
 
-            for fighter in self.fighters:
-                if fighter not in self.same_pos: # append new pos data if not in same pos
-                    current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
-                    fighters_pos_data["Payload"].append(current_fighter)
-                else: # if two or more fighters meet then displays 'x' once! 
-                    if not self.same_pos_added:
-                        current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
-                        fighters_pos_data["Payload"] = []
-                        fighters_pos_data["Payload"].append(current_fighter)
-                        self.same_pos_added = True
+            # for fighter in self.fighters:
+            #     if fighter not in self.same_pos: # append new pos data if not in same pos
+            #         current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
+            #         fighters_pos_data["Payload"].append(current_fighter)
+            #     else: # if two or more fighters meet then displays 'x' once! 
+            #         if not self.same_pos_added:
+            #             current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
+            #             fighters_pos_data["Payload"] = []
+            #             fighters_pos_data["Payload"].append(current_fighter)
+            #             self.same_pos_added = True
 
             self.same_pos = [] # reset same pos
             # set last fighter_pos_data to current to control if there was any change
@@ -198,12 +199,30 @@ class ServerSocket:
                     if not self._check_if_playload_has_x_only(fighters_pos_data):
                         try:
                             # if client in self.sent_strategy_by_client:
-                            if self.last_fighters_pos_data != fighters_pos_data:
-                                for cli in self.sent_strategy_by_client:
-                                    cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                            if fighters_pos_data["PlayerNum"] > 1:
+                                if self.last_fighters_pos_data != fighters_pos_data:
+                                    print("MOVING RANGE", self.fighters[0].moving_range)
+                                    for cli in self.sent_strategy_by_client:
+                                        cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                            elif fighters_pos_data["PlayerNum"] == 1:
+                                # for cli in self.sent_strategy_by_client:
+                                self.sent_strategy_by_client[0].send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                                    # cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                         except:
                             pass
             time.sleep(self.round_time)
+
+    def _process_fighter_payload(self, fighters_pos_data):
+        for fighter in self.fighters:
+            if fighter not in self.same_pos: # append new pos data if not in same pos
+                current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
+                fighters_pos_data["Payload"].append(current_fighter)
+            else: # if two or more fighters meet then displays 'x' once! 
+                if not self.same_pos_added:
+                    current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
+                    fighters_pos_data["Payload"] = []
+                    fighters_pos_data["Payload"].append(current_fighter)
+                    self.same_pos_added = True
 
     def _check_if_playload_has_x_only(self, fighters_pos_data):
         """ Returns true if payload contains only an 'x' """
@@ -242,6 +261,7 @@ class ServerSocket:
         for fighter in self.fighters:
                 fighter._random_moving()
         self.tick_counter = 0 # 'reset' tick counter
+        # TODO put tick_counter outside
 
     def _set_same_post_to_all_fighter(self):
         for fighter in self.fighters:
