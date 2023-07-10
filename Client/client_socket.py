@@ -97,14 +97,16 @@ class ClientSocket:
                 print("DATA: ", received_data)
 
     def _set_map_size_by_player_num(self, received_data):
-        if len(received_data["Payload"]) <= 2:
+        if received_data["PlayerNum"] <= 2:
+        # if len(received_data["Payload"]) <= 2:
             self.map.map_size['x'] = 2
             self.map.map_size['y'] = 2
-            print("MAP SIZE 2: ", self.map.table_size)
-        elif len(received_data["Payload"]) <= 3:
+        elif received_data["PlayerNum"] <= 3:
+        # elif len(received_data["Payload"]) <= 3:
             self.map.map_size['x'] = 4
             self.map.map_size['y'] = 4
-        elif len(received_data["Payload"]) <= 5:
+        elif received_data["PlayerNum"] <= 5:
+        # elif len(received_data["Payload"]) <= 5:
             self.map.map_size['x'] = 5
             self.map.map_size['y'] = 5
 
