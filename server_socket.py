@@ -20,6 +20,7 @@ class ServerSocket:
         self.same_pos = []
         self.same_pos_added = False
         self.round_time = 1.5
+        self.last_fighters_pos_data = []
 
     def _create_socket(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -188,15 +189,18 @@ class ServerSocket:
                         self.same_pos_added = True
 
             self.same_pos = [] # reset same pos
-
+            # set last fighter_pos_data to current to control if there was any change
+            if self.tick_counter >= 2:
+                self.last_fighters_pos_data = fighters_pos_data
             wait_list.append(fighters_pos_data) # add data to temp. holder
             if len(wait_list[0]["Payload"]) > 0: # checks if payload is not empty
                 if not self._check_if_same_pos_but_diff_symbol(fighters_pos_data):
                     if not self._check_if_playload_has_x_only(fighters_pos_data):
                         try:
                             # if client in self.sent_strategy_by_client:
-                            for cli in self.sent_strategy_by_client:
-                                cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                            if self.last_fighters_pos_data != fighters_pos_data:
+                                for cli in self.sent_strategy_by_client:
+                                    cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                         except:
                             pass
             time.sleep(self.round_time)
