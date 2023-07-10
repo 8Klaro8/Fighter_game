@@ -2,7 +2,7 @@ import random
 
 class Fighter:
     def __init__(self, name, strategy, client) -> None:
-        self.health = 14
+        self.health = 30
         self.moving_range = 3
         self.name = name
         self.attack = 3
@@ -18,6 +18,7 @@ class Fighter:
 
     def _add_bonus_dmg(self, bonus_dmg):
         self.attack = self.attack + bonus_dmg
+        self.bonus_dmg_added = True
 
     def _boost_defense(self, extra_def: int, attack_deduct_by_def: int):
         """ Boosts defense and deducts from attack """
@@ -63,9 +64,15 @@ class Fighter:
                 defended_dmg = dmg - self.defense
                 self.health = self.health - defended_dmg
             if self.health <= 0:
-                print(f"\n'{self.name}' is ---DEAD---")
+                print(f"\n---DIED---'{self.name}'")
         else:
-            print(f"\n'{self.name}' Perried!")
+            self.defense = (self.defense + 1) 
+            defended_dmg = dmg - self.defense
+            if defended_dmg > 0:
+                self.health = self.health - defended_dmg
+                print(f"\n---Perried---'{self.name}'")
+            else:
+                print("---NO DMG---")
 
     def _can_attack(self):
         pass
