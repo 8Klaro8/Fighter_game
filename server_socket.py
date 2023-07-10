@@ -166,9 +166,14 @@ class ServerSocket:
             self.same_pos_added = False
 
             # move fighters every 3rd tick
-            if self.tick_counter >= 2:
+            if self.tick_counter >= 4:
                 self._move_fighters()
                 self._fighter_same_pos()
+                duel_manager = DuelManager(self.same_pos)
+                duel_manager.process_fight()
+                self._check_liveness_of_fighters()
+
+            self.tick_counter += 1 # add to tick counter 
 
             for fighter in self.fighters:
                 if fighter not in self.same_pos: # append new pos data if not in same pos
@@ -176,6 +181,7 @@ class ServerSocket:
                     fighters_pos_data["Payload"].append(current_fighter)
                 else: # if two or more fighters meet then displays 'x' once! 
                     if not self.same_pos_added:
+                        # TODO pass number of fighters despite its x
                         current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
                         fighters_pos_data["Payload"] = []
                         fighters_pos_data["Payload"].append(current_fighter)
@@ -194,13 +200,12 @@ class ServerSocket:
 
                     except:
                         pass
-            self.tick_counter += 1 # add to tick counter 
             time.sleep(self.round_time)
 
     def _set_moving_range_by_player_num(self):
         if len(self.fighters) <= 2:
             for fighter in self.fighters:
-                fighter.moving_range = 2
+                fighter.moving_range = 1
         elif len(self.fighters) <= 3:
             for fighter in self.fighters:
                 fighter.moving_range = 3
@@ -254,17 +259,13 @@ class ServerSocket:
             for fighter_2 in self.fighters:
                 if fighter.pos == fighter_2.pos and fighter != fighter_2:
                     if not self._fighter_in_same_pos(fighter):
-                    # if fighter not in self.same_pos:
                         self.same_pos.append(fighter)
                     if not self._fighter_in_same_pos(fighter_2):
-                    # if fighter_2 not in self.same_pos:
                         self.same_pos.append(fighter_2)
-                    print("---Fighters same pos---")
-        duel_manager = DuelManager(self.same_pos)
-        duel_manager.process_fight()
-        self._check_liveness_of_fighters()
-            #         break
-            # break
+
+        # duel_manager = DuelManager(self.same_pos)
+        # duel_manager.process_fight()
+        # self._check_liveness_of_fighters()
 
     def _check_liveness_of_fighters(self):
         """ Removes fighter if health is <= 0 """
