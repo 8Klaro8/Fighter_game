@@ -19,7 +19,6 @@ class ServerSocket:
         self.tick_counter = 0
         self.same_pos = []
         self.same_pos_added = False
-        self.attacked_this_round = False
         self.round_time = 1.5
 
     def _create_socket(self):
@@ -162,7 +161,9 @@ class ServerSocket:
             self._set_moving_range_by_player_num()
 
             wait_list = []
-            fighters_pos_data = {"Type": "FighterUpdatePos", "Payload": []}
+            fighters_pos_data = {"Type": "FighterUpdatePos",
+                                "Payload": [],
+                                "PlayerNum": len(self.fighters)}
             self.same_pos_added = False
 
             # move fighters every 3rd tick
@@ -181,7 +182,6 @@ class ServerSocket:
                     fighters_pos_data["Payload"].append(current_fighter)
                 else: # if two or more fighters meet then displays 'x' once! 
                     if not self.same_pos_added:
-                        # TODO pass number of fighters despite its x
                         current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
                         fighters_pos_data["Payload"] = []
                         fighters_pos_data["Payload"].append(current_fighter)
@@ -192,15 +192,22 @@ class ServerSocket:
             wait_list.append(fighters_pos_data) # add data to temp. holder
             if len(wait_list[0]["Payload"]) > 0: # checks if payload is not empty
                 if not self._check_if_same_pos_but_diff_symbol(fighters_pos_data):
-                    try:
-                        # if client in self.sent_strategy_by_client:
-                        for cli in self.sent_strategy_by_client:
-                            cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
-                            self.attacked_this_round = False # reset fight
-
-                    except:
-                        pass
+                    if not self._check_if_playload_has_x_only(fighters_pos_data):
+                        try:
+                            # if client in self.sent_strategy_by_client:
+                            for cli in self.sent_strategy_by_client:
+                                cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                        except:
+                            pass
             time.sleep(self.round_time)
+
+    def _check_if_playload_has_x_only(self, fighters_pos_data):
+        """ Returns true if payload contains only an 'x' """
+        if fighters_pos_data["PlayerNum"] == 1 and \
+            fighters_pos_data["Payload"][0][0] == "x":
+            return True
+        return False
+
 
     def _set_moving_range_by_player_num(self):
         if len(self.fighters) <= 2:
@@ -212,22 +219,6 @@ class ServerSocket:
         elif len(self.fighters) <= 5:
             for fighter in self.fighters:
                 fighter.moving_range = 4
-
-    def _proccess_fight(self):
-        """ Deducts dmg from life """
-        if len(self.same_pos) > 1:
-            for fighter in self.same_pos:
-                for fighter_2 in self.same_pos:
-                    if fighter != fighter_2:
-                                # fighter._attack(fighter_2)
-                                # fighter_2._attack(fighter)
-                        if not self.attacked_this_round:
-                            print("FIHTER 1: ", fighter.strategy)
-                            print("FIHTER 2: ", fighter_2.strategy)
-                            fighter.health = fighter.health - 3
-                            fighter_2.health = fighter_2.health - 3
-                            print("---ATTACK---")
-                            self.attacked_this_round = True
 
     def _check_if_same_pos_but_diff_symbol(self, fighters_pos_data) -> bool:
         """ If there are more fighters in the payload
