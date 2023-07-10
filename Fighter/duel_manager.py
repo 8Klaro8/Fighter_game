@@ -97,14 +97,6 @@ class DuelManager:
         for fighter in self.fighters:
             for fighter_2 in self.fighters:
                 if fighter.name != fighter_2.name:
-                    # process each strategy before fight
-                    # self._process_fighters_strategies(fighter)
-                    # self._process_fighters_strategies(fighter_2)
-                    # add bonus dmg if not yet been added
-                    # if not self.bonus_dmg_added:
-                    #     print("---Bonus Dmg---")
-                    #     self._add_bonus_dmg(fighter, fighter_2)
-                    # fight only if not fought this round
                     if not self.fought_this_round:
                         fighter._attack(fighter_2)
                         fighter_2._attack(fighter)
