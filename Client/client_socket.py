@@ -44,10 +44,9 @@ class ClientSocket:
                 self.map._place_fighter(self.fighters_details)
                 self.map._print_map()
 
-            elif received_data["Type"] == "Fail":
-                print("\n---------------------------\n"
-                      f"{received_data['Payload'][0]}"
-                      "\n---------------------------")
+            elif received_data["Type"] == "Fail" or \
+                    received_data["Type"] == "AlreadyLoggedIn":
+                self._print_prompt(f"{received_data['Payload'][0]}")
                 self._send_data()
 
             elif received_data["Type"] == "Logged":
@@ -62,7 +61,7 @@ class ClientSocket:
                     strategy_if["Payload"].append(strat)
                 print(strategy_if)
                 # strategy_if["Payload"].append(strategy[0])
-                self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))                
+                self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))    
 
             elif received_data["Type"] == "Fighters":
                 print(f"\n{received_data['Payload']}")
@@ -97,28 +96,24 @@ class ClientSocket:
                 print("DATA: ", received_data)
 
     def _set_map_size_by_player_num(self, received_data):
+        """ Sets the size of the map based on player num. """
         if received_data["PlayerNum"] <= 2:
-        # if len(received_data["Payload"]) <= 2:
             self.map.map_size['x'] = 2
             self.map.map_size['y'] = 2
         elif received_data["PlayerNum"] <= 3:
-        # elif len(received_data["Payload"]) <= 3:
             self.map.map_size['x'] = 4
             self.map.map_size['y'] = 4
         elif received_data["PlayerNum"] <= 5:
-        # elif len(received_data["Payload"]) <= 5:
             self.map.map_size['x'] = 5
             self.map.map_size['y'] = 5
 
     def _send_data(self):
-        # data = {"Type": "Action", "Strategy": "YOYO"}
-        # self.client_socket.send(self._jsonify_data(data).encode('utf-8'))
-
+        """ Sends the chosen auth credentialals to server """
         # register req.
-        self.auth._show_logic_if()
-        credentials_payoad = self.auth._receive_user_input()
+        self.auth._display_auth_options()
+        credentials_payoad = self.auth._receive_user_auth_choice()
         self.client_socket.send(self._jsonify_data(credentials_payoad).encode('utf-8'))
-        credentials_payoad["Payload"] = []
+        credentials_payoad["Payload"] = [] # set paylaod to empty
 
     def _jsonify_data(self, data: dict) -> json:
         return json.dumps(data)
@@ -127,6 +122,10 @@ class ClientSocket:
         # TODO dont send data if fighter is dead
         return json.loads(data)
 
+    def _print_prompt(self, text):
+        print("\n------------------------\n"
+                f"{text}"
+                "\n------------------------\n")
 
 if __name__ == '__main__':
     client_socket = ClientSocket(port=6060, host="localhost")
