@@ -3,7 +3,7 @@ import random
 class Fighter:
     def __init__(self, name, strategy, client) -> None:
         self.health = 30
-        self.moving_range = 3
+        self.moving_range = 1
         self.name = name
         self.attack = 3
         self.defense = 1
