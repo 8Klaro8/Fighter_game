@@ -19,7 +19,8 @@ class ServerSocket:
         self.tick_counter = 0
         self.same_pos = []
         self.same_pos_added = False
-        self.round_time = 1.5
+        self.round_time = 0.8
+        # TODO adjust round_time based on player num.
         self.last_fighters_pos_data = []
 
     def _create_socket(self):
@@ -62,7 +63,10 @@ class ServerSocket:
                     # delete fighter
                     for fighter in self.fighters:
                         if fighter.name == left_username:
-                            self.fighters.remove(fighter)
+                            self.fighters.remove(fighter) # remove fighter
+                            left_user = fighter.matching_client # get corresponding client
+                            self.sent_strategy_by_client.remove(left_user) # remove from sent strategies
+
                     print(f"'{left_username}' has left.")
                     # remove client
                     self.connected_users.pop(i)
@@ -231,7 +235,6 @@ class ServerSocket:
             return True
         return False
 
-
     def _set_moving_range_by_player_num(self):
         if len(self.fighters) <= 2:
             for fighter in self.fighters:
@@ -296,7 +299,6 @@ class ServerSocket:
                             .encode('utf-8'))
                 self.fighters.remove(fighter)
                 self.sent_strategy_by_client.remove(dead_user)
-                print()
 
     def _fighter_in_same_pos(self, fighter) -> bool:
         """ Checks if fighter is already appended in self.same_pos"""
