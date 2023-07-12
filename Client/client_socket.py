@@ -88,6 +88,7 @@ class ClientSocket:
 
         elif received_data["Type"] == "Died":
             print("You Died!")
+            self.choose_strategy.strategies = [] # reset strategies
             strategy_if = {"Type": "Strategy", "Payload": []}
             strategy = self.choose_strategy.choose_option()
             print("SENDING STRATEGY: ", strategy)
