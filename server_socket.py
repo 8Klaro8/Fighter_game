@@ -95,16 +95,25 @@ class ServerSocket:
                 client.send(self._jsonify_data(self.outgoing_queue.get())
                             .encode('utf-8'))
             else:
-                loggedin_if = {"Type": "Logged",
-                                "Payload": ["Successfuly logged in!"]}
-                self.outgoing_queue.put(loggedin_if)
-                client.send(self._jsonify_data(self.outgoing_queue.get())
-                            .encode('utf-8'))
-                self.outgoing_queue.task_done()
-                print(f"'{username}' Logged in!")
-                # saved logged in users
-                i = self._get_user_by_client(client)
-                self.connected_users[i]["Username"] = username
+                # check if not already logged in
+                if not self._is_user_logged_in(username):
+                    loggedin_if = {"Type": "Logged",
+                                    "Payload": ["Successfuly logged in!"]}
+                    self.outgoing_queue.put(loggedin_if)
+                    client.send(self._jsonify_data(self.outgoing_queue.get())
+                                .encode('utf-8'))
+                    self.outgoing_queue.task_done()
+                    print(f"'{username}' Logged in!")
+                    # saved logged in users
+                    i = self._get_user_by_client(client)
+                    self.connected_users[i]["Username"] = username
+                else:
+                    already_loggedin_if = {"Type": "AlreadyLoggedIn",
+                                    "Payload": ["You are already logged in!"]}
+                    wait_list = []
+                    wait_list.append(already_loggedin_if)
+                    client.send(self._jsonify_data(wait_list[0])
+                                .encode('utf-8'))
 
         elif data["Type"] == "Action":
             print("Action request...")
@@ -118,7 +127,17 @@ class ServerSocket:
             i = self._get_user_by_client(client)
             fighter_name = self.connected_users[i]["Username"]
             fighter = Fighter(fighter_name, strategy, client)
-            self.fighters.append(fighter) # append created fighter to all fighter
+            self.fighters.append(fighter) 
+
+    def _is_user_logged_in(self, username: str) -> bool:
+        """ Checks if user is already logged in """
+        for connected_user in self.connected_users:
+            try:
+                if username == connected_user["Username"]:
+                    return True
+            except:
+                pass
+        return False
 
     def _broadcast_fighters_pos(self, client):
         """ Sends all fighters pos to clients """
