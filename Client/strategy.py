@@ -4,8 +4,9 @@
 
 class ChooseStrategy:
     def __init__(self) -> None:
-        self.actions = ["Fight", "Defend", "Run"]
-        self.events = ["Fighter nearby", "2 fighters nearby", "In corner"]
+        self.actions = ["Aggressive", "Defend", "Run"]
+        # self.events = ["Fighter nearby", "2 fighters nearby", "In corner"]
+        self.events = ["1on2", "In corner", "below 50% Hp"]
         self.strategies = []
         self.options = {1: ["Choose strategy", self.show_strategies],
                         2: ["Go to Fight!", self._fight]}
@@ -32,8 +33,6 @@ class ChooseStrategy:
         if not self.is_fight:
             self._print_prompt("FIGHT")
             self.is_fight = True
-        
-        # TODO return strategy to fight
 
     def show_strategies(self):
         print("\n------------------------\nActions")
@@ -62,10 +61,9 @@ class ChooseStrategy:
         print("\n------------------------\n"
                 f"{text}"
                 "\n------------------------\n")
-            
 
     def _strategy_added(self, strategy) -> bool:
-        """ Checks if strategy -action, event pair
+        """ Checks if strategy action, event pair
         has been already added """
         current_action = strategy["Action"]
         current_event = strategy["Event"]
