@@ -13,14 +13,15 @@ class Authentication:
         self.options = {1: ["Login", self._login],
                         2: ["Register", self._register]}
 
-    def _show_logic_if(self):
+    def _display_auth_options(self):
         """ Displays authentication options"""
         print("------------------------\nOptions:")
         for option_num, option in self.options.items():
             print(f"{option_num}.) {option[0]}")
 
-    def _receive_user_input(self) -> dict:
-        """ Start chosen functionality """
+    def _receive_user_auth_choice(self) -> dict:
+        """ Start chosen functionality (login or register)
+        and returns the given credentials """
         choice = int(input("\nChoose... "))
         self.options[choice][1]() # calling choosed function/ option
         return self.auth_if
@@ -92,5 +93,5 @@ class Authentication:
 
 if __name__ == '__main__':
     auth = Authentication()
-    auth._show_logic_if()
-    auth._receive_user_input()
+    auth._display_auth_options()
+    auth._receive_user_auth_choice()
