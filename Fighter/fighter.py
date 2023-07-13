@@ -2,7 +2,7 @@ import random
 
 class Fighter:
     def __init__(self, name, strategy, client) -> None:
-        self.health = 30
+        self.health = 10
         self.moving_range = 1
         self.name = name
         self.attack = 3
@@ -14,11 +14,31 @@ class Fighter:
         self._defense_boosted = False
         self._miss_chance_boosted = False
         self.matching_client = client
+        self.bonus_attack_range = [1, 1, 1, 1, 1, 1, 2, 2, 2, 3]
         self._random_pos()
+
+    def _get_rand_bonus_dmg(self) -> int:
+        """ Selects a random number as bonus dmg """
+        return random.choice(self.bonus_attack_range)
 
     def _add_bonus_dmg(self, bonus_dmg):
         self.attack = self.attack + bonus_dmg
-        self.bonus_dmg_added = True
+
+    def _add_agressive_behaviour(self):
+        """ Adds bonus dmg randomly and deducts the same value from defense """
+        aggressive_random_num = self._get_rand_bonus_dmg()
+        new_defense = (self.defense - aggressive_random_num)
+        if new_defense >= 0:
+            self.defense = new_defense
+            self.attack = self.attack + aggressive_random_num
+            print("---aggressive behaviour---")
+        else:
+            # if new_defense is negative then deduct it from health
+            self.defense = 0
+            self.attack = self.attack + aggressive_random_num
+            self.health = self.health - abs(new_defense)
+            print("---aggressive behaviour minus health---")
+
 
     def _boost_defense(self, extra_def: int, attack_deduct_by_def: int):
         """ Boosts defense and deducts from attack """
@@ -46,10 +66,6 @@ class Fighter:
         if chance_of_getting_hit <= self.miss_chance:
             return True
         return False
-        # for num in range(1, (self.miss_chance + 1)):
-        #     if num == chance_of_getting_hit:
-        #         return True
-        # return False
 
     def _attack(self, opponent):
         """ Attacks other fighter """
@@ -66,19 +82,14 @@ class Fighter:
             if self.health <= 0:
                 print(f"\n---DIED---'{self.name}'")
         else:
-            self.defense = (self.defense + 1) 
-            defended_dmg = dmg - self.defense
+            # perried but still gets dmg if defnded_dmg is greater than 0
+            self.defense = (self.defense + 1) # if perried attack then +1 defense
+            defended_dmg = dmg - self.defense # defend dmg
             if defended_dmg > 0:
                 self.health = self.health - defended_dmg
                 print(f"\n---Perried---'{self.name}'")
             else:
-                print("---NO DMG---")
-
-    def _can_attack(self):
-        pass
-
-    def _resurrect_fighter(self):
-        pass
+                print("---NO DMG: defens greater than dmg---")
 
     def _random_moving(self):
         """ Sets the next randomic movemnt/ pos. """
@@ -115,27 +126,31 @@ class Fighter:
             self.pos[1] = current_y + new_y
 
     def _is_on_edge_x_max(self) -> bool:
+        """ Returns true if fighter is on edge """
         if self.pos[0] >= self.moving_range:
             return True
         return False
     
     def _is_on_edge_x_min(self) -> bool:
+        """ Returns true if fighter is on edge """
         if self.pos[0] <= 0:
             return True
         return False
     
     def _is_on_edge_y_max(self) -> bool:
+        """ Returns true if fighter is on edge """
         if self.pos[1] >= self.moving_range:
             return True
         return False
     
     def _is_on_edge_y_min(self) -> bool:
+        """ Returns true if fighter is on edge """
         if self.pos[1] <= 0:
             return True
         return False
 
     def _random_pos(self) -> list:
-        """ Saves a random position for a fighter """
+        """ Initializes a random position for a fighter """
         x_pos = random.randint(0,self.moving_range)
         y_pos = random.randint(0,self.moving_range)
         self.pos = [x_pos, y_pos]
