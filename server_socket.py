@@ -84,6 +84,7 @@ class ServerSocket:
                 self._register_user(data, client)
 
         elif data["Type"] == "Login":
+            # TODO if username is wrong then print that instead of wrong password
             print("Login request...")
             username = data["Payload"][0]["Username"]
             password = data["Payload"][0]["Password"]
@@ -224,7 +225,6 @@ class ServerSocket:
                             # if client in self.sent_strategy_by_client:
                             if fighters_pos_data["PlayerNum"] > 1:
                                 if self.last_fighters_pos_data != fighters_pos_data:
-                                    print("MOVING RANGE", self.fighters[0].moving_range)
                                     for cli in self.sent_strategy_by_client:
                                         cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                             elif fighters_pos_data["PlayerNum"] == 1:
