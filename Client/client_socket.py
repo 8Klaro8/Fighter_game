@@ -1,6 +1,4 @@
-
-
-import socket, json, threading, random
+import socket, json, threading, os
 from Authentication.auth import Authentication
 from Client.strategy import ChooseStrategy
 from Client.arena import Map
@@ -61,15 +59,15 @@ class ClientSocket:
                 logout_req_if = {"Type": "LogoutReq", "Payload": ["Logout user upon request."]}
                 self.client_socket.send(self._jsonify_data(logout_req_if).encode('utf-8'))    
                 self._send_data()
-            # else:
-            print("SENDING STRATEGY: ", strategy)
-            # send strategy to server
-            # append each chosen strategy to if.
-            for strat in strategy:
-                strategy_if["Payload"].append(strat)
-            print(strategy_if)
-            # strategy_if["Payload"].append(strategy[0])
-            self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))    
+            else:
+                print("SENDING STRATEGY: ", strategy)
+                # send strategy to server
+                # append each chosen strategy to if.
+                for strat in strategy:
+                    strategy_if["Payload"].append(strat)
+                print(strategy_if)
+                # strategy_if["Payload"].append(strategy[0])
+                self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))    
 
         elif received_data["Type"] == "Fighters":
             print(f"\n{received_data['Payload']}")
@@ -137,7 +135,13 @@ class ClientSocket:
 
 if __name__ == '__main__':
     client_socket = ClientSocket(port=6060, host="localhost")
+    # client_socket = ClientSocket(port=6060, host="172.17.0.2")
     client_socket._create_socket()
+
+# if __name__ == '__main__':
+#     port = int(os.getenv('CLIENT_PORT', 6060))
+#     client_socket = ClientSocket(port=port, host="172.17.0.2")
+#     client_socket._create_socket()
     
     receive_thread = threading.Thread(target=client_socket._receive_data)
     receive_thread.start()
