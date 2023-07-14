@@ -22,9 +22,7 @@ class Authentication:
     def _receive_user_auth_choice(self) -> dict:
         """ Start chosen functionality (login or register)
         and returns the given credentials """
-        # choice = int(input("\nChoose... "))
         choice = input("\nChoose... ")
-        # self.options[choice][1]() # calling choosed function/ option
         self._control_user_input(choice)
         return self.auth_if
     
@@ -45,14 +43,17 @@ class Authentication:
     def _login(self) -> dict:
         """ Asks for login credentials & returns it """
         credentials = {"Username": None, "Password": None}
-        print("\nPress 'b' to go back\n--------------------")
+        is_go_back = False
+        print("\nType 'back' to go back\n--------------------")
 
         while True:
             username = input("Type your username... ")
             if self._go_back_function(username):
+                is_go_back = True
                 break
             password = input("Type your password...")
             if self._go_back_function(password):
+                is_go_back = True
                 break
 
             # setup login if.
@@ -65,15 +66,18 @@ class Authentication:
             # sending login if. to server
             print("Sending credentials to server...")
             print(f"Payload: ", self.auth_if)
+            break
 
         # Goes back to auth screen if 'b' was pressed
-        self._display_auth_options()
-        self._receive_user_auth_choice()
+        print("IS_GO_BACK: ", is_go_back)
+        if is_go_back:
+            self._display_auth_options()
+            self._receive_user_auth_choice()
 
     def _register(self):
         """ Returns register if. """
         credentials = {"Username": None, "Password": None}
-        print("\nPress 'b' to go back\n--------------------")
+        print("\nType 'back' to go back\n--------------------")
 
         while True:
             username = input("\nChoose a username... ")
@@ -122,7 +126,7 @@ class Authentication:
     
     def _go_back_function(self, input:str):
         """ Calls the corresponding fucntion where to go back """
-        if input.lower() == 'b':
+        if input.lower() == 'back':
             return True
         return False
 
