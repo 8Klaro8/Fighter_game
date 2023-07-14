@@ -1,7 +1,4 @@
 
-import keyboard
-
-
 class ChooseStrategy:
     def __init__(self) -> None:
         self.actions = ["Aggressive", "Defend", "Run"]
