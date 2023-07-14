@@ -141,8 +141,9 @@ class DuelManager:
 
             elif strat["Action"] == "Aggressive" and \
                     strat["Event"] == "1on2":
-                fighter._add_agressive_behaviour()
-                self._print_prompt("AGGRESSIVE")
+                if len(self.fighters) >= 3:
+                    fighter._add_agressive_behaviour()
+                    self._print_prompt("AGGRESSIVE")
 
             elif strat["Action"] == "Aggressive" and \
                     strat["Event"] == "In corner":
