@@ -134,8 +134,8 @@ class ClientSocket:
                 "\n------------------------\n")
 
 if __name__ == '__main__':
-    client_socket = ClientSocket(port=6060, host="localhost")
-    # client_socket = ClientSocket(port=6060, host="172.17.0.2")
+    # client_socket = ClientSocket(port=6060, host="localhost") # local config
+    client_socket = ClientSocket(port=6060, host="172.17.0.2") # docker config
     client_socket._create_socket()
 
 # if __name__ == '__main__':
