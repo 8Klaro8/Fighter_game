@@ -154,8 +154,9 @@ class DuelManager:
 
             elif strat["Action"] == "Aggressive" and \
                     strat["Event"] == "below 50% Hp":
-                fighter._add_agressive_behaviour()
-                self._print_prompt("AGGRESSIVE")
+                if fighter.health <= self.fighter_orig_health / 2:
+                    fighter._add_agressive_behaviour()
+                    self._print_prompt("AGGRESSIVE")
 
     def _print_prompt(self, text):
         print("\n------------------------\n"
