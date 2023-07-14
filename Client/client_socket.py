@@ -25,14 +25,13 @@ class ClientSocket:
             received_data = self.client_socket.recv(1024)
             if not received_data:
                 break
-            
             received_data = self._read_json(received_data.decode('utf-8'))
             self._process_data_from_server(received_data)
 
     def _process_data_from_server(self, received_data):
         if received_data["Type"] == "FighterUpdatePos":
             self.fighters_details = []
-                # check how much fighters are there
+            # check how much fighters are there
             self._set_map_size_by_player_num(received_data)
                 
             for fighter in received_data["Payload"]:
@@ -43,7 +42,7 @@ class ClientSocket:
                 print("FIGHT_LIST: ", fighter_list)
                 if fighter_list not in self.fighters_details:
                     self.fighters_details.append(fighter_list)
-                # print map with fighters on it
+            # print map with fighters on it
             self.map._place_fighter(self.fighters_details)
             self.map._print_map()
 
@@ -54,23 +53,29 @@ class ClientSocket:
 
         elif received_data["Type"] == "Logged":
             print(received_data["Payload"][0])
-                # calling strategy
+            # calling strategy
             strategy_if = {"Type": "Strategy", "Payload": []}
             strategy = self.choose_strategy.choose_option()
+            # control if strategy sent back logout
+            if strategy == "Logout":
+                logout_req_if = {"Type": "LogoutReq", "Payload": ["Logout user upon request."]}
+                self.client_socket.send(self._jsonify_data(logout_req_if).encode('utf-8'))    
+                self._send_data()
+            # else:
             print("SENDING STRATEGY: ", strategy)
-                # send strategy to server
-                # append each chosen strategy to if.
+            # send strategy to server
+            # append each chosen strategy to if.
             for strat in strategy:
                 strategy_if["Payload"].append(strat)
             print(strategy_if)
-                # strategy_if["Payload"].append(strategy[0])
+            # strategy_if["Payload"].append(strategy[0])
             self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))    
 
         elif received_data["Type"] == "Fighters":
             print(f"\n{received_data['Payload']}")
-                # save fighters
+            # save fighters
             self.fighters_details = []
-                # get out name, and positions from each fighter to draw the map
+            # get out name, and positions from each fighter to draw the map
             for fighter in received_data["Payload"]:
                 name = fighter["Name"]
                 x_pos = fighter["Pos"][0]
@@ -78,7 +83,7 @@ class ClientSocket:
                 fighter_list = [name, x_pos, y_pos]
                 if fighter_list not in self.fighters_details:
                     self.fighters_details.append(fighter_list)
-                # print map with fighters on it
+            # print map with fighters on it
             self.map._place_fighter(self.fighters_details)
             self.map._print_map()
 
@@ -92,12 +97,12 @@ class ClientSocket:
             strategy_if = {"Type": "Strategy", "Payload": []}
             strategy = self.choose_strategy.choose_option()
             print("SENDING STRATEGY: ", strategy)
-                # send strategy to server
+            # send strategy to server
             strategy_if["Payload"].append(strategy[0])
             self.client_socket.send(self._jsonify_data(strategy_if).encode('utf-8'))     
 
         else:
-            print("DATA: ", received_data)
+            print("ELSE DATA: ", received_data)
 
     def _set_map_size_by_player_num(self, received_data):
         """ Sets the size of the map based on player num. """
@@ -113,8 +118,7 @@ class ClientSocket:
 
     def _send_data(self):
         """ Sends the chosen auth credentialals to server """
-        # register req.
-        self.auth._display_auth_options()
+        self.auth._display_auth_options() # register req.
         credentials_payoad = self.auth._receive_user_auth_choice()
         self.client_socket.send(self._jsonify_data(credentials_payoad).encode('utf-8'))
         credentials_payoad["Payload"] = [] # set paylaod to empty
