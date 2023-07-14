@@ -1,4 +1,4 @@
-import socket, json, threading, time, queue, random
+import socket, json, threading, time, queue, random, os
 from Database.database import Database
 from Authentication.auth import Authentication
 from Fighter.fighter import Fighter
@@ -112,10 +112,13 @@ class ServerSocket:
                 else:
                     already_loggedin_if = {"Type": "AlreadyLoggedIn",
                                     "Payload": ["You are already logged in!"]}
-                    wait_list = []
-                    wait_list.append(already_loggedin_if)
-                    client.send(self._jsonify_data(wait_list[0])
+                    self.outgoing_queue.put(already_loggedin_if)
+                    # wait_list = []
+                    # wait_list.append(already_loggedin_if)
+                    client.send(self._jsonify_data(self.outgoing_queue.get())
+                    # client.send(self._jsonify_data(wait_list[0])
                                 .encode('utf-8'))
+                    # self.outgoing_queue.task_done()
 
         elif data["Type"] == "Action":
             print("Action request...")
@@ -355,8 +358,15 @@ test_data = {"Type": "Register",
              "Payload": [{"Username": "Kakao", "Password": "123"}]}
 if __name__ == '__main__':
     server_socket = ServerSocket(6060, "localhost")
+    # server_socket = ServerSocket(6060, "0.0.0.0")
     server_socket._create_socket()
+
     # server_socket._accept_new_connections()
     # server_socket._register_user(test_data)
+
+# if __name__ == '__main__':
+#     port = int(os.getenv('SERVER_PORT', 6060))
+#     server_socket = ServerSocket(port, "0.0.0.0")
+#     server_socket._create_socket()
 
     
