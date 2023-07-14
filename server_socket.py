@@ -357,8 +357,8 @@ class ServerSocket:
 test_data = {"Type": "Register",
              "Payload": [{"Username": "Kakao", "Password": "123"}]}
 if __name__ == '__main__':
-    server_socket = ServerSocket(6060, "localhost")
-    # server_socket = ServerSocket(6060, "0.0.0.0")
+    # server_socket = ServerSocket(6060, "localhost") # local config
+    server_socket = ServerSocket(6060, "0.0.0.0") # docker config
     server_socket._create_socket()
 
     # server_socket._accept_new_connections()
