@@ -105,8 +105,9 @@ class ServerSocket:
                                 .encode('utf-8'))
                     self.outgoing_queue.task_done()
                     print(f"'{username}' Logged in!")
-                    # saved logged in users
+                    # save logged in users
                     i = self._get_user_by_client(client)
+                    # TODO delete previous client when logged in again?!
                     self.connected_users[i]["Username"] = username
                 else:
                     already_loggedin_if = {"Type": "AlreadyLoggedIn",
@@ -129,6 +130,14 @@ class ServerSocket:
             fighter_name = self.connected_users[i]["Username"]
             fighter = Fighter(fighter_name, strategy, client)
             self.fighters.append(fighter) 
+
+        elif data["Type"] == "LogoutReq": # remove user from logged in users
+            i = self._get_user_by_client(client)
+            current_user = self.connected_users[i]["Username"]
+            print(data["Payload"][0]) # printing out log out request payload
+            # self.connected_users.pop(i)
+            self.connected_users[i]["Username"] = "" # set username to empty upon 'logout'
+            print(f"User: {current_user} has been logged out.")
 
     def _is_user_logged_in(self, username: str) -> bool:
         """ Checks if user is already logged in """
@@ -191,7 +200,7 @@ class ServerSocket:
                                 "PlayerNum": len(self.fighters)}
             self.same_pos_added = False
 
-            # move fighters every 3rd tick
+            # pricess and move fighters every 4th tick
             if self.tick_counter >= 4:
                 self._move_fighters()
                 self._fighter_same_pos()
@@ -199,43 +208,38 @@ class ServerSocket:
                 duel_manager.process_fight()
                 self._process_fighter_payload(fighters_pos_data)
                 self._check_liveness_of_fighters()
-
             self.tick_counter += 1 # add to tick counter 
 
-            # for fighter in self.fighters:
-            #     if fighter not in self.same_pos: # append new pos data if not in same pos
-            #         current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
-            #         fighters_pos_data["Payload"].append(current_fighter)
-            #     else: # if two or more fighters meet then displays 'x' once! 
-            #         if not self.same_pos_added:
-            #             current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
-            #             fighters_pos_data["Payload"] = []
-            #             fighters_pos_data["Payload"].append(current_fighter)
-            #             self.same_pos_added = True
-
             self.same_pos = [] # reset same pos
-            # set last fighter_pos_data to current to control if there was any change
             if self.tick_counter >= 2:
+                # set last fighter_pos_data to current to control if there was any change
                 self.last_fighters_pos_data = fighters_pos_data
+
+            # create test queu
+            test_queue = queue.Queue(5)
+            test_queue.put(fighters_pos_data)
+
             wait_list.append(fighters_pos_data) # add data to temp. holder
             if len(wait_list[0]["Payload"]) > 0: # checks if payload is not empty
                 if not self._check_if_same_pos_but_diff_symbol(fighters_pos_data):
                     if not self._check_if_playload_has_x_only(fighters_pos_data):
                         try:
-                            # if client in self.sent_strategy_by_client:
                             if fighters_pos_data["PlayerNum"] > 1:
+                                # if there is a change only then send data
                                 if self.last_fighters_pos_data != fighters_pos_data:
+                                    current_data_from_queue = test_queue.get()
                                     for cli in self.sent_strategy_by_client:
-                                        cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
+                                        cli.send(self._jsonify_data(current_data_from_queue).encode('utf-8'))
+                                        # test_queue.task_done()
+                                        # cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                             elif fighters_pos_data["PlayerNum"] == 1:
-                                # for cli in self.sent_strategy_by_client:
                                 self.sent_strategy_by_client[0].send(self._jsonify_data(wait_list[0]).encode('utf-8'))
-                                    # cli.send(self._jsonify_data(wait_list[0]).encode('utf-8'))
                         except:
                             pass
             time.sleep(self.round_time)
 
     def _process_fighter_payload(self, fighters_pos_data):
+        """ Delegates fighters based on their poition """
         for fighter in self.fighters:
             if fighter not in self.same_pos: # append new pos data if not in same pos
                 current_fighter = [fighter.name, fighter.pos[0], fighter.pos[1]]
@@ -243,7 +247,7 @@ class ServerSocket:
             else: # if two or more fighters meet then displays 'x' once! 
                 if not self.same_pos_added:
                     current_fighter = ["x", fighter.pos[0], fighter.pos[1]]
-                    fighters_pos_data["Payload"] = []
+                    # fighters_pos_data["Payload"] = []
                     fighters_pos_data["Payload"].append(current_fighter)
                     self.same_pos_added = True
 
