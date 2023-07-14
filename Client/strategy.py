@@ -1,5 +1,5 @@
 
-
+import keyboard
 
 
 class ChooseStrategy:
@@ -12,19 +12,56 @@ class ChooseStrategy:
                         2: ["Go to Fight!", self._fight]}
         self.is_fight = False
 
+    def _go_back_function(self, input:str):
+        """ Calls the corresponding fucntion where to go back """
+        if input.lower() == 'back':
+            return True
+        return False
+    
+    def _logout_function(self, input:str):
+        """ Calls the corresponding fucntion where to go back """
+        if input.lower() == 'logout':
+            return True
+        return False
+
+    def _control_user_input(self, input):
+        """ Controls if user choosed a valid option
+        on the validation screen """
+        try:
+            input = int(input)
+            try:
+                self.options[input][1]()
+            except:
+                self._print_prompt("Invalid number...")
+                self.choose_option()
+                # self._receive_user_auth_choice()
+        except:
+            self._print_prompt("Please give a valid choice...")
+            self.choose_option()
+            # self._receive_user_auth_choice()
+        
     def choose_option(self) -> list:
+        print("\nType 'logout' to log out\n--------------------")
         print("\n------------------------\n"
               "Options:")
         for i in range(len(self.options)):
             print(f"{i+1}.) {self.options[i+1][0]}")
 
-        chosen_option = int(input("Choose an option..."))
+        chosen_option = input("Choose an option...")
+        if self._logout_function(chosen_option):
+            self._print_prompt("Logging out...")
+            return "Logout"
+
+        self._control_user_input(chosen_option)
+
         # calling chosed option
-        self.options[chosen_option][1]()
+        # self.options[chosen_option][1]()
 
         # if already pressed fight then return staregies
         if self.is_fight:
             return self.strategies
+        
+        # return "Logout"
 
     def _fight(self):
         if len(self.strategies) <= 0:
