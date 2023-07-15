@@ -3,9 +3,9 @@ FROM python:3.11
 WORKDIR /client-app
 
 ENV PYTHONPATH "${PYTHONPATH}:/client-app"
-# ENV CLIENT_PORT=6060
 
 ADD Client/client_socket.py ./Client/
+ADD Database/database.py ./Database/
 ADD Authentication/auth.py ./Authentication/
 ADD Client/strategy.py ./Client/
 ADD Client/arena.py ./Client/
