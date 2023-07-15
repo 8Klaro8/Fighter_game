@@ -88,14 +88,31 @@ class ServerSocket:
             print("Login request...")
             username = data["Payload"][0]["Username"]
             password = data["Payload"][0]["Password"]
-            if not self.auth._auth_logging_user(username, password):
+            if not self.database._user_exists(username):
+                user_doest_not_exists_if = {"Type": "UserDoesNotExists",
+                        "Payload": ["User does not exists."]}
+                self.outgoing_queue.put(user_doest_not_exists_if)
+                client.send(self._jsonify_data(self.outgoing_queue.get())
+                            .encode('utf-8'))
+                self.outgoing_queue.task_done()
+            
+            elif not self.auth._auth_logging_user(username, password):
                 print("Wrong password...")
                 wrong_password_if = {"Type": "Fail",
                                         "Payload": ["Wrong password."]}
                 self.outgoing_queue.put(wrong_password_if)
                 client.send(self._jsonify_data(self.outgoing_queue.get())
                             .encode('utf-8'))
-            else:
+                self.outgoing_queue.task_done()
+                
+            elif self.auth._auth_logging_user(username, password) == "FileNotFound":
+                file_not_found_if = {"Type": "FileNotFound",
+                        "Payload": ["User not found. Register instead!"]}
+                self.outgoing_queue.put(file_not_found_if)
+                client.send(self._jsonify_data(self.outgoing_queue.get())
+                            .encode('utf-8'))
+
+            elif self.auth._auth_logging_user(username, password):
                 # check if not already logged in
                 if not self._is_user_logged_in(username):
                     loggedin_if = {"Type": "Logged",
@@ -338,10 +355,11 @@ class ServerSocket:
     def _user_exists(self, register_payload) -> bool:
         """ Checks if user already exists """
         content = None
-        content = self.database._read_users_json()
-        if content == None:
-            return False
         username = register_payload['Payload'][0]['Username']
+        password = register_payload['Payload'][0]['Password']
+        content = self.database._read_users_json(username, password)
+        if content == None or content == False:
+            return False
         for user in content['Users']:
             if user['Username'] == username:
                 return True
@@ -352,13 +370,19 @@ class ServerSocket:
     
     def _read_json(self, data) -> bool:
         return json.loads(data)
+    
+    def _print_prompt(self, text):
+        print("\n------------------------\n"
+                f"{text}"
+                "\n------------------------\n")
 
 
 test_data = {"Type": "Register",
              "Payload": [{"Username": "Kakao", "Password": "123"}]}
+
 if __name__ == '__main__':
-    # server_socket = ServerSocket(6060, "localhost") # local config
-    server_socket = ServerSocket(6060, "0.0.0.0") # docker config
+    server_socket = ServerSocket(6060, "localhost") # local config
+    # server_socket = ServerSocket(6060, "0.0.0.0") # docker config
     server_socket._create_socket()
 
     # server_socket._accept_new_connections()
