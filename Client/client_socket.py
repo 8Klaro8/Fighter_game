@@ -45,7 +45,9 @@ class ClientSocket:
             self.map._print_map()
 
         elif received_data["Type"] == "Fail" or \
-                    received_data["Type"] == "AlreadyLoggedIn":
+                received_data["Type"] == "AlreadyLoggedIn" or \
+                received_data["Type"] == "FileNotFound" or\
+                received_data["Type"] == "UserDoesNotExists" :
             self._print_prompt(f"{received_data['Payload'][0]}")
             self._send_data()
 
@@ -134,8 +136,8 @@ class ClientSocket:
                 "\n------------------------\n")
 
 if __name__ == '__main__':
-    # client_socket = ClientSocket(port=6060, host="localhost") # local config
-    client_socket = ClientSocket(port=6060, host="172.17.0.2") # docker config
+    client_socket = ClientSocket(port=6060, host="localhost") # local config
+    # client_socket = ClientSocket(port=6060, host="172.17.0.2") # docker config
     client_socket._create_socket()
 
 # if __name__ == '__main__':
