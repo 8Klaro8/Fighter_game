@@ -1,12 +1,15 @@
 
 
 
-import time, json, keyboard
+import time, json
+from Database.database import Database
 
 class Authentication:
     def __init__(self) -> None:
         self.username = None
         self.password = None
+        self.database = Database()
+        self._go_back = False
         # self.login_if = {"Type": "Login", "Payload": []}
         # self.register_if = {"Type": "Register", "Payload": []}
         self.auth_if = {"Type": None, "Payload": []}
@@ -75,19 +78,22 @@ class Authentication:
             self._receive_user_auth_choice()
 
     def _register(self):
-        """ Returns register if. """
+        """ Saves register if. """
         credentials = {"Username": None, "Password": None}
         print("\nType 'back' to go back\n--------------------")
 
         while True:
             username = input("\nChoose a username... ")
             if self._go_back_function(username):
+                self._go_back = True
                 break
             password = input("Choose a password...")
             if self._go_back_function(password):
+                self._go_back = True
                 break
             rep_password = input("Repeat password...")
             if self._go_back_function(rep_password):
+                self._go_back = True
                 break
             
             if not self._control_password(password, rep_password):
@@ -100,14 +106,16 @@ class Authentication:
                 credentials["Password"] = password
                 self.auth_if['Payload'].append(credentials)
                 self.auth_if["Type"] = "Register"
-                # self.register_if['Payload'].append(credentials)
 
                 print("Sending register credentials to server...")
                 print(f"Payload: ", self.auth_if)
+                break
 
-        # Goes back to auth screen if 'b' was pressed
-        self._display_auth_options()
-        self._receive_user_auth_choice()
+        if self._go_back:
+            self._go_back = False
+            # Goes back to auth screen if 'back' was typed
+            self._display_auth_options()
+            self._receive_user_auth_choice()
 
     def _control_password(self, password_1: str, password_2: str) -> bool:
         """ Checks if passwords match """
@@ -117,7 +125,12 @@ class Authentication:
     
     def _auth_logging_user(self, username: str, password: str) -> bool:
         """ If username and password match then returns True """
-        content = self._read_users_json()
+        content = self.database._read_users_json(username, password)
+        # content = self._read_users_json(username, password)
+
+        if not content:
+            return "FileNotFound"
+        
         for user in content["Users"]:
             if user["Username"] == username:
                 if user["Password"] == password:
@@ -129,12 +142,3 @@ class Authentication:
         if input.lower() == 'back':
             return True
         return False
-
-    def _read_users_json(self):
-        with open("users.json", "r") as file:
-            try:
-                content = json.load(file)
-            except json.JSONDecodeError:
-                print("Users file is empty.")
-                return None
-        return content
