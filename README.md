@@ -14,12 +14,23 @@
  - Once you choosed your strategy you are able to send your fighter to fight
    and from that point you have no control over your fighter, only the strategy you implanted earlier.
 
+# Features
+ - Authentication
+ - Able to choose from 3 different type of actions and 3 types of events.
+ - Once your fighter dies you can select an other strategy and send it back to the arena.
+ - The map changes size based on player number for better playing experience.
+
 # Further development
  - Preserve killing/ survining points after each match/death.
  - Preserve points once the game ends/closed.
  - Add more action/event to the game.
  - Create better balance among the chosen strategies.
  - Limit strategies to be chosen.
+ - Create secure password storage
 
 # Bugs
  - No current bug is known
+
+# Docker
+ - 1.) Pull the server-app and cient-app images from this profile: https://hub.docker.com/u/robingerg
+ - 2.) Clone 
