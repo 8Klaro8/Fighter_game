@@ -1,0 +1,14 @@
+FROM python:3.11
+
+WORKDIR /server-app
+
+# ENV SERVER_PORT=6060
+
+ADD server_socket.py .
+ADD Database/database.py ./Database/
+ADD Authentication/auth.py ./Authentication/
+ADD Fighter/fighter.py ./Fighter/
+ADD Fighter/duel_manager.py ./Fighter/
+# ADD users.json .
+
+CMD [ "python", "./server_socket.py" ]
