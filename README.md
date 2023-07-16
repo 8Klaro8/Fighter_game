@@ -33,4 +33,7 @@
 
 # Docker
  - 1.) Pull the server-app and cient-app images from this profile: https://hub.docker.com/u/robingerg
- - 2.) Clone 
+ - 2.) Clone this repository
+ - 3.) Check the server_socket.py and scroll to the bottom. If local config is enabled/uncommented then comment it out and below it uncomment the docker config line
+ - 4.) Check the client_socket.py and scroll to the bottom. If local config is enabled/uncommented then comment it out and below it uncomment the docker config line, after that in thsi line: client_socket = ClientSocket(port=port, host="172.17.0.2"), repalce host="..." with your ip.
+ - 5.) Play!
