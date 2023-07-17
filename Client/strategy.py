@@ -1,13 +1,43 @@
-
 class ChooseStrategy:
     def __init__(self) -> None:
         self.actions = ["Aggressive", "Defend", "Run"]
-        # self.events = ["Fighter nearby", "2 fighters nearby", "In corner"]
         self.events = ["1on2", "In corner", "below 50% Hp"]
         self.strategies = []
         self.options = {1: ["Choose strategy", self.show_strategies],
-                        2: ["Go to Fight!", self._fight]}
+                        2: ["Go to Fight!", self._fight],
+                        3: ["Show manual", self._show_maunal]}
         self.is_fight = False
+
+    def _show_maunal(self):
+        """ Shows """
+        while True:
+            print("\nChoose one to inspect...")
+            to_inspect_i = self._print_strategy(self.actions)
+            # to_inpect_item = self.actions[to_inspect_i]
+
+            self._show_strategy_description(to_inspect_i)
+
+            input_choice = input("\nType 'back' or 'c' for continue.")
+            if self._go_back_function(input_choice):
+                self.choose_option()
+            elif input_choice.lower() == "c":
+                self._show_maunal()
+
+    def _show_strategy_description(self, strategy_i):
+        print(f"\n---{self.actions[strategy_i]} DESCRIPTION---")
+        if self.actions[strategy_i] == "Aggressive":
+            print("It generates a random number(1-3),\n"
+                  "60% chance""of 1, 30% of 2 and 10% of 3.\n"
+                  "This number will be deducted from the defense\n"
+                  "and will added to the attack point.\n")
+        
+        elif self.actions[strategy_i] == "Defend":
+            print("Adds 1+ to the defense and -1 from attack.")
+
+        elif self.actions[strategy_i] == "Run":
+            print("Sets miss chance to 90%,\n"
+                  "however attack will be 0 or 1.")
+
 
     def _go_back_function(self, input:str):
         """ Calls the corresponding fucntion where to go back """
@@ -88,9 +118,6 @@ class ChooseStrategy:
             self._print_prompt("Your chosen strategy already exists.")
             self.choose_option()
             
-        # print(self.strategies)
-        # self.choose_option()
-
     def _print_prompt(self, text):
         print("\n------------------------\n"
                 f"{text}"
@@ -108,11 +135,13 @@ class ChooseStrategy:
         return False
 
     def _print_strategy(self, strategy: list) -> int:
-        """ Prints avaialble action & events """
+        """ Prints avaialble action & events and returns chosen
+         item number """
         print()
         for i in range(len(strategy)):
             print(f"{i+1}.) {strategy[i]}")
         if strategy == self.actions:
+            # TODO control input
             return (int(input("Choose action...")) - 1)
         elif strategy == self.events:
             return (int(input("Choose event...")) - 1)
@@ -121,3 +150,8 @@ if __name__ == '__main__':
     chs = ChooseStrategy()
     while True:
         chs.choose_option()
+
+
+        # docker tag server-app robingerg/fighter_game:fighter-server
+        # docker push robingerg/fighter_game:latest
+
