@@ -43,6 +43,6 @@
  - Events: 1on2, In corner, below 50% Hp
 
 # Action description
- - Aggressive: It generates a random number(1-3), 60% chance""of 1, 30% of 2 and 10% of 3. This number will be deducted from the defense and will added to the attack point.
+ - Aggressive: It generates a random number(1-3), 60% chance of 1, 30% of 2 and 10% of 3. This number will be deducted from the defense and will added to the attack point.
  - Defend: Adds 1+ to the defense and -1 from attack.
  - Run: Sets miss chance to 90%, however attack will be 0 or 1.
