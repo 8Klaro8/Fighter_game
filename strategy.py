@@ -19,7 +19,6 @@ class Strategy:
     def main_stategy(self):
         while True:
             self._show_options()
-            # self._ask_user_for_strategy()
 
     def _fight(self):
         print("FIGHT")
@@ -125,9 +124,6 @@ class Strategy:
             return True
         return False
             
-        
-
-
 
 if __name__ == '__main__':
     strategy = Strategy()
