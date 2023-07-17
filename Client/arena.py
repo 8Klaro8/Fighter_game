@@ -1,13 +1,9 @@
-import sys, random
-
-
-
 class Map:
     """ Prints out the map in the terminal and processes
     & dispalys new status of the map"""
     def __init__(self) -> None:
         self.coordinates = None
-        self.table_size = 2
+        self.table_size = 4
         self.map_size = {"x": self.table_size, "y": self.table_size}
         self.map_array = []
 

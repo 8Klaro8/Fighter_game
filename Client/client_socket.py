@@ -1,4 +1,4 @@
-import socket, json, threading, os
+import socket, json, threading
 from Authentication.auth import Authentication
 from Client.strategy import ChooseStrategy
 from Client.arena import Map

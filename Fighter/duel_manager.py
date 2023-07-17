@@ -1,15 +1,8 @@
-import random
-
-
-
 class DuelManager:
     def __init__(self, fighters: list) -> None:
         self.actions = ["Aggressive", "Defend", "Run"]
         self.events = ["1on2", "In corner", "below 50% Hp"]
         self.fighters = fighters
-        self.extra_defense = 1
-        self.attack_deduct_by_def = 1
-        self.miss_chance = 8
         self.fighter_orig_health = 14
         self.is_duel_done = False
         self.bonus_dmg_added = False
@@ -87,11 +80,11 @@ class DuelManager:
                 if action == "Run":
                     if not fighter._miss_chance_boosted:
                         print("Raise chance of not getting hit")
-                        fighter._boost_miss_chance(self.miss_chance)
+                        fighter._boost_miss_chance()
                         break
                 elif action == "Defend":
                     if not fighter._defense_boosted:
-                        fighter._boost_defense(self.extra_defense, self.attack_deduct_by_def)
+                        fighter._boost_defense()
                         break
 
     def _process_fighters_strategies(self, fighter):
@@ -102,42 +95,39 @@ class DuelManager:
                     strat["Event"] == "1on2":
                 if len(self.fighters) > 2:
                     print(f"---1ON2---{fighter.name}")
-                    fighter._boost_miss_chance(self.miss_chance)
+                    fighter._boost_miss_chance()
 
             elif strat["Action"] == "Run" and \
                 strat["Event"] == "In corner":
                 if self._check_fighters_corner_pos(fighter):
-                    fighter._boost_miss_chance(self.miss_chance)
+                    fighter._boost_miss_chance()
                     self._print_prompt(f"'{fighter.name}' BELOW 50% - health: {fighter.health} - CORNER")
 
                     
             elif strat["Action"] == "Run" and \
                 strat["Event"] == "below 50% Hp":
                 if fighter.health <= self.fighter_orig_health / 2:
-                    fighter._boost_miss_chance(self.miss_chance)
+                    fighter._boost_miss_chance()
                     self._print_prompt(f"'{fighter.name}' BELOW 50% - health: {fighter.health}")
 
             elif strat["Action"] == "Defend" and \
                     strat["Event"] == "1on2":
                 if len(self.fighters) > 2:
                     print(f"---DEFEND 1ON2---{fighter.name}")
-                    fighter._boost_defense(self.extra_defense,
-                                        self.attack_deduct_by_def)
+                    fighter._boost_defense()
                     
             elif strat["Action"] == "Defend" and \
                     strat["Event"] == "In corner":
                 if self._check_fighters_corner_pos(fighter):
-                    fighter._boost_miss_chance(self.miss_chance)
-                    fighter._boost_defense(self.extra_defense,
-                                        self.attack_deduct_by_def)
+                    fighter._boost_miss_chance()
+                    fighter._boost_defense()
                     self._print_prompt(f"'{fighter.name}' DEFEND CORNER")
                     
             elif strat["Action"] == "Defend" and \
                     strat["Event"] == "below 50% Hp":
                 if fighter.health <= self.fighter_orig_health / 2:
                     print(f"---DEFEND 50% HP---{fighter.name}")
-                    fighter._boost_defense(self.extra_defense,
-                                        self.attack_deduct_by_def)
+                    fighter._boost_defense()
 
             elif strat["Action"] == "Aggressive" and \
                     strat["Event"] == "1on2":
@@ -148,7 +138,7 @@ class DuelManager:
             elif strat["Action"] == "Aggressive" and \
                     strat["Event"] == "In corner":
                 if self._check_fighters_corner_pos(fighter):
-                    fighter._boost_miss_chance(self.miss_chance)
+                    fighter._boost_miss_chance()
                     fighter._add_agressive_behaviour()
                     self._print_prompt(f"'{fighter.name}' AGGRESSIVE CORNER")
 

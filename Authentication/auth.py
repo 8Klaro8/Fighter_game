@@ -1,7 +1,7 @@
 
 
 
-import time, json
+import time
 from Database.database import Database
 
 class Authentication:

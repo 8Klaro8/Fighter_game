@@ -1,4 +1,4 @@
-import socket, json, threading, time, queue, random, os
+import socket, json, threading, time, queue, random
 from Database.database import Database
 from Authentication.auth import Authentication
 from Fighter.fighter import Fighter

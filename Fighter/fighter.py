@@ -2,12 +2,15 @@ import random
 
 class Fighter:
     def __init__(self, name, strategy, client) -> None:
-        self.health = 10
+        self.health = 16 # must be even
         self.moving_range = 1
         self.name = name
         self.attack = 3
+        self.attack_deduct_by_def = 1
         self.defense = 1
+        self.extra_def = 1
         self.miss_chance = 1 # represent %
+        self.extra_miss_chance = 8
         self.strategy = strategy
         self.pos = ()
         self.move_updated = False
@@ -40,16 +43,16 @@ class Fighter:
             print("---aggressive behaviour minus health---")
 
 
-    def _boost_defense(self, extra_def: int, attack_deduct_by_def: int):
+    def _boost_defense(self):
         """ Boosts defense and deducts from attack """
-        self.defense += extra_def # boost defense
-        self.attack -= attack_deduct_by_def # deduct from attack becase of def
+        self.defense += self.extra_def # boost defense
+        self.attack -= self.attack_deduct_by_def # deduct from attack becase of def
         self._defense_boosted = True
 
-    def _boost_miss_chance(self, extra_miss_chance):
+    def _boost_miss_chance(self):
         """ Boosts the chance to perry dmg """
-        self.miss_chance += extra_miss_chance
-        self.attack = 0 # set attack to 0 because of running
+        self.miss_chance += self.extra_miss_chance
+        self.attack = random.randint(0,1)
         self._miss_chance_boosted = True
 
     def _reset_defaults(self):
